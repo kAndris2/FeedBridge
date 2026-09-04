@@ -33,8 +33,7 @@ namespace FeedBridge.Services
 
             _driveService = new DriveService(new BaseClientService.Initializer
             {
-                HttpClientInitializer = credential,
-                ApplicationName = "My C# Google Drive App"
+                HttpClientInitializer = credential
             });
         }
 
