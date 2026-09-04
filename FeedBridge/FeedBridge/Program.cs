@@ -8,6 +8,8 @@ var builder = Host.CreateApplicationBuilder(args);
 
 builder.Services.Configure<GoogleCredentials>(
     builder.Configuration.GetSection("GoogleCredentials"));
+builder.Services.Configure<NcoreSettings>(
+    builder.Configuration.GetSection("NcoreSettings"));
 
 builder.Services.AddScoped<GoogleDriveService>();
 builder.Services.AddScoped<Application>();
