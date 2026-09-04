@@ -1,8 +1,10 @@
 ﻿using System.Text;
+using Microsoft.Extensions.Options;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Drive.v3;
 using Google.Apis.Services;
 using Google.Apis.Util.Store;
+using FeedBridge.Models;
 
 namespace FeedBridge.Services
 {
@@ -10,12 +12,16 @@ namespace FeedBridge.Services
     {
         private readonly DriveService _driveService;
 
-        public GoogleDriveService()
+        public GoogleDriveService(IOptions<GoogleCredentials> credentials)
         {
-            using var stream = new FileStream("credentials.json", FileMode.Open, FileAccess.Read);
+            var clientSecrets = new ClientSecrets
+            {
+                ClientId = credentials.Value.ClientId,
+                ClientSecret = credentials.Value.ClientSecret
+            };
 
             var credential = GoogleWebAuthorizationBroker.AuthorizeAsync(
-                GoogleClientSecrets.FromStream(stream).Secrets,
+                clientSecrets,
                 new[]
                 {
                     DriveService.Scope.Drive
