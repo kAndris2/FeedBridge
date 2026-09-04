@@ -1,9 +1,13 @@
 ﻿using FeedBridge;
+using FeedBridge.Models;
 using FeedBridge.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
 var builder = Host.CreateApplicationBuilder(args);
+
+builder.Services.Configure<GoogleDriveSettings>(
+    builder.Configuration.GetSection("GoogleDriveSettings"));
 
 builder.Services.AddScoped<GoogleDriveService>();
 builder.Services.AddScoped<Application>();
