@@ -1,4 +1,5 @@
-﻿using FeedBridge.Services;
+﻿using FeedBridge.Models;
+using FeedBridge.Services;
 
 namespace FeedBridge
 {
@@ -8,7 +9,8 @@ namespace FeedBridge
 
         public void Start()
         {
-
+            var xmlReader = new XmlReader();
+            var doc = xmlReader.FromFile<NcoreRssDocument>("");
         }
     }
 }
