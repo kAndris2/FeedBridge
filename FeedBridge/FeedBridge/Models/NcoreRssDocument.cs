@@ -16,7 +16,7 @@ namespace FeedBridge.Models
     public class Channel
     {
         [XmlElement(ElementName = "item")]
-        public List<Item> Item { get; set; }
+        public List<Item> Items { get; set; }
     }
 
     [XmlRoot(ElementName = "rss")]
