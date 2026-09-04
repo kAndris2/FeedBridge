@@ -8,9 +8,6 @@ namespace FeedBridge.Models
         [XmlElement(ElementName = "title")]
         public string Title { get; set; }
 
-        [XmlElement(ElementName = "link")]
-        public string DownloadUrl { get; set; }
-
         [XmlElement(ElementName = "category")]
         public string Category { get; set; }
     }
