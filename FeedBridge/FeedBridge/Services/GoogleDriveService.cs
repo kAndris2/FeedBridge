@@ -28,7 +28,7 @@ namespace FeedBridge.Services
                 },
                 "user",
                 CancellationToken.None,
-                new FileDataStore("token.json", true)
+                new FileDataStore("GoogleAuth", true)
             ).Result;
 
             _driveService = new DriveService(new BaseClientService.Initializer
