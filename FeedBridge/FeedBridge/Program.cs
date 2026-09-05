@@ -1,8 +1,8 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using FeedBridge;
-using FeedBridge.Models;
 using FeedBridge.Services;
+using FeedBridge.Models.Configuration;
 
 var builder = Host.CreateApplicationBuilder(args);
 

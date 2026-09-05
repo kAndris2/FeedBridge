@@ -1,4 +1,4 @@
-﻿namespace FeedBridge.Models
+﻿namespace FeedBridge.Models.Configuration
 {
     public class TmdbSettings
     {

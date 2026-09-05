@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Options;
 using FeedBridge.Models;
 using FeedBridge.Services;
+using FeedBridge.Models.Configuration;
 
 namespace FeedBridge
 {
