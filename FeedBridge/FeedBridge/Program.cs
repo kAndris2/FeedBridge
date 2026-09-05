@@ -17,7 +17,8 @@ builder.Services.AddScoped<GoogleDriveService>();
 builder.Services.AddScoped<Application>();
 
 using var host = builder.Build();
+using var scope = host.Services.CreateScope();
 
-host.Services
+scope.ServiceProvider
     .GetRequiredService<Application>()
     .Start();

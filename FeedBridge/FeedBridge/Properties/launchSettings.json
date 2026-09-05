@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "FeedBridge": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}
