@@ -11,5 +11,7 @@
                 return Url + "/rss.php?key=" + PassKey;
             }
         }
+        public string FeedLocation { get; set; }
+        public string[] CategoryFilter { get; set; }
     }
 }
