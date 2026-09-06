@@ -32,10 +32,13 @@ namespace FeedBridge.Tests
 
         [Theory]
         [InlineData("This is the title", null)]
-        [InlineData("This.is.the.title.2024.BDRip.x264.Asd-Full", 2024)]
-        [InlineData("Title.2024.BDRip.x264.Asd-Full", 2024)]
-        [InlineData("District.9.2009.BDRip.XviD.Asd-Full", 2009)]
-        public void ExtractReleaseYear_ReturnOnlyReleaseYear(string input, int? expected)
+        [InlineData("This is the title 1997-2010", "1997-2010")]
+        [InlineData("This_is_the_title_(1997-2010)-Asd", "1997-2010")]
+        [InlineData("This is the title 1997-2010-s912", "1997-2010")]
+        [InlineData("This.is.the.title.2024.BDRip.x264.Asd-Full", "2024")]
+        [InlineData("Title.2024.BDRip.x264.Asd-Full", "2024")]
+        [InlineData("District.9.2009.BDRip.XviD.Asd-Full", "2009")]
+        public void ExtractReleaseYear_ReturnOnlyReleaseYear(string input, string? expected)
         {
             var result = _propExtractor.ExtractReleaseYear(input);
 

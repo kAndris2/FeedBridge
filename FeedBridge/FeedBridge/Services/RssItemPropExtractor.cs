@@ -30,12 +30,15 @@ namespace FeedBridge.Services
                 : null;
         }
 
-        public int? ExtractReleaseYear(string input)
+        public string? ExtractReleaseYear(string input)
         {
-            var match = Regex.Match(input, @"\b(?<year>(19|20)\d{2})\b", RegexOptions.CultureInvariant);
+            var match = Regex.Match(
+                input,
+                @"(?<!\d)(?<year>(?:19|20)\d{2}(?:-(?:19|20)\d{2})?)(?!\d)",
+                RegexOptions.CultureInvariant);
 
             return match.Success
-                ? int.Parse(match.Groups["year"].Value)
+                ? match.Groups["year"].Value
                 : null;
         }
 
