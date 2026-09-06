@@ -10,6 +10,9 @@ namespace FeedBridge.Models
 
         [XmlElement(ElementName = "category")]
         public string Category { get; set; }
+
+        [XmlElement(ElementName = "pubDate")]
+        public string PublishedDate { get; set; }
     }
 
     [XmlRoot(ElementName = "channel")]
