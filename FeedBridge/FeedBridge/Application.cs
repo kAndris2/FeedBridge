@@ -5,15 +5,16 @@ using FeedBridge.Models.Configuration;
 
 namespace FeedBridge
 {
-    public class Application(GoogleDriveService driveService, IOptions<NcoreSettings> ncoreSettings)
+    public class Application(GoogleDriveService driveService, CatalogItemFactory factory, IOptions<NcoreSettings> ncoreSettings)
     {
         private readonly NcoreSettings _ncoreSettings = ncoreSettings.Value;
         private readonly GoogleDriveService _driveService = driveService;
+        private readonly CatalogItemFactory _factory = factory;
 
         public void Start()
         {
             var relevantItems = CollectRelevantItemsFromFeed();
-            var catalogItems = new CatalogItemFactory().CreateCatalogItems(relevantItems);
+            var catalogItems = _factory.CreateCatalogItems(relevantItems);
         }
 
         private IEnumerable<Item> CollectRelevantItemsFromFeed()

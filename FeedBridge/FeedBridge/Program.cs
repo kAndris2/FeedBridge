@@ -13,6 +13,8 @@ builder.Services.Configure<NcoreSettings>(
 builder.Services.Configure<TmdbSettings>(
     builder.Configuration.GetSection("TmdbSettings"));
 
+builder.Services.AddScoped<RssItemPropExtractor>();
+builder.Services.AddScoped<CatalogItemFactory>();
 builder.Services.AddScoped<GoogleDriveService>();
 builder.Services.AddScoped<Application>();
 
