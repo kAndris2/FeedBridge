@@ -41,5 +41,17 @@ namespace FeedBridge.Tests
 
             Assert.Equal(expected, result);
         }
+
+        [Theory]
+        [InlineData("This.is.the.title.2024.BDRip.x264.Asd-Full [Movie (HUN SD)]", "HUN")]
+        [InlineData("This.is.the.title.2024.BDRip.x264.Asd-Full [Movie (ENG SD)]", "ENG")]
+        [InlineData("Artist - Title [Mp3 (ENG)]", "ENG")]
+        [InlineData("EVERSPACE.2.v1.5.56893.REPACK-KaOs [Game (RIP)]", null)]
+        public void GuessLanguage_ReturnsLanguageMarkerFromTitle(string input, string? expected)
+        {
+            var result = _propExtractor.GuessLanguage(input);
+
+            Assert.Equal(expected, result);
+        }
     }
 }
