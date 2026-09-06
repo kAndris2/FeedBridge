@@ -6,7 +6,10 @@ namespace FeedBridge.Services
     {
         public string ExtractTitle(string input)
         {
-            var match = Regex.Match(input, @"^(?<title>.+?)(?=[.\s](?:(?:19|20)\d{2}|S\d{2}(?:E\d{2})?|\d{3,4}p)\b)", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+            var match = Regex.Match(
+                input,
+                @"^(?<title>.+?)(?=[.\s](?:(?:19|20)\d{2}|S\d{2}(?:E\d{2})?|\d{3,4}p|BDRip|BRRip|WEBRip|WEB-DL|BluRay|HDTV|DVDRip|HDRip)\b)",
+                RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
 
             if (!match.Success)
             {
