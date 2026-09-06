@@ -11,10 +11,10 @@ namespace FeedBridge
         private readonly GoogleDriveService _driveService = driveService;
         private readonly CatalogItemFactory _factory = factory;
 
-        public void Start()
+        public async Task Start()
         {
             var relevantItems = CollectRelevantItemsFromFeed();
-            var catalogItems = _factory.CreateCatalogItems(relevantItems);
+            var catalogItems = await _factory.CreateCatalogItems(relevantItems);
         }
 
         private IEnumerable<Item> CollectRelevantItemsFromFeed()

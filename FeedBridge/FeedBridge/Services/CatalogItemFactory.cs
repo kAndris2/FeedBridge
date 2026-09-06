@@ -4,48 +4,83 @@ using FeedBridge.Models;
 
 namespace FeedBridge.Services
 {
-    public class CatalogItemFactory(RssItemPropExtractor rssItemPropExtractor)
+    public class CatalogItemFactory(RssItemPropExtractor rssItemPropExtractor, TmdbService tmdbService)
     {
         private readonly RssItemPropExtractor _rssItemPropExtractor = rssItemPropExtractor;
+        private readonly TmdbService _tmdbService = tmdbService;
 
-        public IEnumerable<ICatalogItem> CreateCatalogItems(IEnumerable<Item> items)
+        public async Task<IEnumerable<ICatalogItem>> CreateCatalogItems(IEnumerable<Item> items)
         {
-            return items.Select(item => CreateCatalogItem(item))
-                .Where(item => item != null)
-                .Select(item => item!);
+            var catalogItems = new List<ICatalogItem>();
+
+            foreach(var item in items)
+            {
+                var catalogItem = await CreateCatalogItem(item);
+
+                if (catalogItem == null) continue;
+
+                catalogItems.Add(catalogItem);
+            }
+
+            return catalogItems;
         }
 
-        private ICatalogItem? CreateCatalogItem(Item item)
+        private async Task<ICatalogItem?> CreateCatalogItem(Item item)
         {
             var category = GuessCategory(item.Category);
             var title = _rssItemPropExtractor.ExtractTitle(item.Title);
 
-            return (category) switch
+            switch (category)
             {
-                Category.Movie => new MovieCatalogItem(title, category, item.PublishedDate)
+                case Category.Movie:
                 {
-                    Quality = _rssItemPropExtractor.ExtractQuality(item.Title),
-                    Language = _rssItemPropExtractor.GuessLanguage(item.Title),
-                    ReleaseYear = _rssItemPropExtractor.ExtractReleaseYear(item.Title)
-                },
-                Category.Series => new SeriesCatalogItem(title, category, item.PublishedDate)
+                    var extractedReleaseYear = _rssItemPropExtractor.ExtractReleaseYear(item.Title);
+                    _ = int.TryParse(extractedReleaseYear, out int releaseYear);
+                    var mediaInfo = await _tmdbService.SearchMovieAsync(title, releaseYear);
+
+                    return new MovieCatalogItem(title, category, item.PublishedDate)
+                    {
+                        Quality = _rssItemPropExtractor.ExtractQuality(item.Title),
+                        Language = _rssItemPropExtractor.GuessLanguage(item.Title),
+                        ReleaseYear = releaseYear,
+                        PosterUrl = mediaInfo?.PosterUrl,
+                        Rate = mediaInfo?.Rate
+                    };
+                }
+                case Category.Series:
                 {
-                    Quality = _rssItemPropExtractor.ExtractQuality(item.Title),
-                    Language = _rssItemPropExtractor.GuessLanguage(item.Title),
-                    Season = _rssItemPropExtractor.ExtractSeasonEpisode(item.Title),
-                },
-                Category.Music => new MusicCatalogItem(title, category, item.PublishedDate)
+                    var mediaInfo = await _tmdbService.SearchMovieAsync(title);
+
+                    return new SeriesCatalogItem(title, category, item.PublishedDate)
+                    {
+                        Quality = _rssItemPropExtractor.ExtractQuality(item.Title),
+                        Language = _rssItemPropExtractor.GuessLanguage(item.Title),
+                        Season = _rssItemPropExtractor.ExtractSeasonEpisode(item.Title),
+                        PosterUrl = mediaInfo?.PosterUrl,
+                        Rate = mediaInfo?.Rate
+                    };
+                }
+                case Category.Music:
                 {
-                    Language = _rssItemPropExtractor.GuessLanguage(item.Title),
-                    ReleaseYear = _rssItemPropExtractor.ExtractReleaseYear(item.Title)
-                },
-                Category.Book => new LanguageCatalogItem(title, category, item.PublishedDate)
+                    return new MusicCatalogItem(title, category, item.PublishedDate)
+                    {
+                        Language = _rssItemPropExtractor.GuessLanguage(item.Title),
+                        ReleaseYear = _rssItemPropExtractor.ExtractReleaseYear(item.Title)
+                    };
+                }
+                case Category.Book:
                 {
-                    Language = _rssItemPropExtractor.GuessLanguage(item.Title)
-                },
-                Category.Game or Category.Program => new CatalogItem(title, category, item.PublishedDate),
-                _ => throw new InvalidDataException($"Unknown item category! ({item.Category})")
-            };
+                    return new LanguageCatalogItem(title, category, item.PublishedDate)
+                    {
+                        Language = _rssItemPropExtractor.GuessLanguage(item.Title)
+                    };
+                }
+                case Category.Game or Category.Program:
+                {
+                    return new CatalogItem(title, category, item.PublishedDate);
+                }
+                default: throw new InvalidDataException($"Unknown item category! ({item.Category})");
+            }
         }
 
         private Category? GuessCategory(string category)
