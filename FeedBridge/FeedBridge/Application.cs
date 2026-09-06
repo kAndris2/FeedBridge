@@ -1,8 +1,9 @@
-﻿using System.Text.Json;
+﻿using System.Text.Encodings.Web;
+using System.Text.Json;
 using Microsoft.Extensions.Options;
 using FeedBridge.Models;
-using FeedBridge.Services;
 using FeedBridge.Models.Configuration;
+using FeedBridge.Services;
 
 namespace FeedBridge
 {
@@ -19,7 +20,8 @@ namespace FeedBridge
 
             var jsonContent = JsonSerializer.Serialize(catalogItems, new JsonSerializerOptions
             {
-                WriteIndented = true
+                WriteIndented = true,
+                Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
             });
             await _driveService.UploadJsonAsync(jsonContent);
         }
