@@ -1,3 +1,4 @@
 <Solution>
+  <Project Path="FeedBridge.Tests/FeedBridge.Tests.csproj" Id="b2d3ed2d-9229-4319-b718-ceb21015eeed" />
   <Project Path="FeedBridge/FeedBridge.csproj" />
 </Solution>
