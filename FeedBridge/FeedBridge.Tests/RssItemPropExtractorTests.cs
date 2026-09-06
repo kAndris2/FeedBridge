@@ -16,5 +16,17 @@ namespace FeedBridge.Tests
 
             Assert.Equal(expected, result);
         }
+
+        [Theory]
+        [InlineData("This is the title", null)]
+        [InlineData("This.is.the.title.2024.BDRip.x264.Asd-Full", null)]
+        [InlineData("This.is.the.title.2024.1080p.BDRip.x264.Asd-Full", "1080p")]
+        [InlineData("This.is.the.title.2024.720p.AMZN.WEB-DL.DDP2.0.H.264.Asd-Full", "720p")]
+        public void ExtractQuality_ReturnsOnlyQualityInformation(string input, string expected)
+        {
+            var result = _propExtractor.ExtractQuality(input);
+
+            Assert.Equal(expected, result);
+        }
     }
 }
