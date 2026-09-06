@@ -13,6 +13,7 @@ namespace FeedBridge
         public void Start()
         {
             var relevantItems = CollectRelevantItemsFromFeed();
+            var catalogItems = new CatalogItemFactory().CreateCatalogItems(relevantItems);
         }
 
         private IEnumerable<Item> CollectRelevantItemsFromFeed()

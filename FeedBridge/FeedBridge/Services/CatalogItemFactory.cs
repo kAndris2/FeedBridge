@@ -1,7 +1,7 @@
-﻿using FeedBridge.Enums;
+﻿using System.Text.RegularExpressions;
+using FeedBridge.Enums;
 using FeedBridge.Interfaces;
 using FeedBridge.Models;
-using System.Text.RegularExpressions;
 
 namespace FeedBridge.Services
 {
@@ -43,7 +43,7 @@ namespace FeedBridge.Services
                     Language = GuessLanguage(item.Title)
                 },
                 Category.Game or Category.Program => new CatalogItem(title, category, item.PublishedDate),
-                _ => null
+                _ => throw new InvalidDataException($"Unknown item category! ({item.Category})")
             };
         }
 
