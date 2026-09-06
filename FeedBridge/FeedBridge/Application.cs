@@ -31,7 +31,9 @@ namespace FeedBridge
             var xmlReader = new XmlReader();
             var doc = xmlReader.FromFile<NcoreRssDocument>(_ncoreSettings.FeedLocation);
 
-            return doc.Channel.Items.Where(item => _ncoreSettings.CategoryFilter.Contains(item.Category));
+            return doc.Channel.Items
+                .Where(item => _ncoreSettings.CategoryFilter.Contains(item.Category))
+                .Where(item => !item.Title.Contains("E0"));
         }
     }
 }
