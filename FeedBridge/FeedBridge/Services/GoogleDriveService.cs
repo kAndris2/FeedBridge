@@ -10,10 +10,13 @@ namespace FeedBridge.Services
 {
     public class GoogleDriveService
     {
+        private readonly GoogleDriveSettings _driveSettings;
         private readonly DriveService _driveService;
 
-        public GoogleDriveService(IOptions<GoogleCredentials> credentials)
+        public GoogleDriveService(IOptions<GoogleCredentials> credentials, IOptions<GoogleDriveSettings> driveSettings)
         {
+            _driveSettings = driveSettings.Value;
+
             var clientSecrets = new ClientSecrets
             {
                 ClientId = credentials.Value.ClientId,
