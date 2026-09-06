@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Options;
+﻿using System.Text.Json;
+using Microsoft.Extensions.Options;
 using FeedBridge.Models;
 using FeedBridge.Services;
 using FeedBridge.Models.Configuration;
@@ -15,6 +16,12 @@ namespace FeedBridge
         {
             var relevantItems = CollectRelevantItemsFromFeed();
             var catalogItems = await _factory.CreateCatalogItems(relevantItems);
+
+            var jsonContent = JsonSerializer.Serialize(catalogItems, new JsonSerializerOptions
+            {
+                WriteIndented = true
+            });
+            await _driveService.UploadJsonAsync(jsonContent);
         }
 
         private IEnumerable<Item> CollectRelevantItemsFromFeed()

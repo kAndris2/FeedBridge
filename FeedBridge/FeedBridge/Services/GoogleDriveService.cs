@@ -25,10 +25,9 @@ namespace FeedBridge.Services
 
             var credential = GoogleWebAuthorizationBroker.AuthorizeAsync(
                 clientSecrets,
-                new[]
-                {
+                [
                     DriveService.Scope.Drive
-                },
+                ],
                 "user",
                 CancellationToken.None,
                 new FileDataStore("GoogleAuth", true)
@@ -40,128 +39,62 @@ namespace FeedBridge.Services
             });
         }
 
-        public async Task<string> UploadOrUpdateJsonAsync(string[] folderPath, string fileName, string jsonContent)
+        public async Task UploadJsonAsync(string content)
         {
-            string? parentFolderId = null;
+            var fileName = _driveSettings.JsonFileName + ".json";
+            var request = _driveService.Files.List();
 
-            foreach (var folderName in folderPath)
-            {
-                parentFolderId = await GetOrCreateFolderAsync(
-                    folderName,
-                    parentFolderId);
-            }
+            request.Q =
+                $"name = '{EscapeQueryValue(_driveSettings.TargetFolder)}' " +
+                "and mimeType = 'application/vnd.google-apps.folder' " +
+                "and trashed = false";
 
-            string? existingFileId = await FindFileAsync(
-                fileName,
-                parentFolderId!);
+            request.Fields = "files(id, name)";
+            request.PageSize = 1;
 
-            using var stream = new MemoryStream(
-                Encoding.UTF8.GetBytes(jsonContent));
+            var folderResult = await request.ExecuteAsync();
+            var folder = folderResult.Files.FirstOrDefault() ?? throw new DirectoryNotFoundException($"Google Drive folder not found: {_driveSettings.TargetFolder}");
+            request = _driveService.Files.List();
 
-            if (existingFileId != null)
-            {
-                var metadata = new Google.Apis.Drive.v3.Data.File
-                {
-                    Name = fileName,
-                    MimeType = "application/json"
-                };
-
-                await _driveService.Files
-                    .Update(metadata, existingFileId, stream, "application/json")
-                    .UploadAsync();
-
-                return existingFileId;
-            }
-            else
-            {
-                var metadata = new Google.Apis.Drive.v3.Data.File
-                {
-                    Name = fileName,
-                    MimeType = "application/json",
-                    Parents = new List<string>
-                    {
-                        parentFolderId!
-                    }
-                };
-
-                var request = _driveService.Files.Create(metadata, stream, "application/json");
-
-                request.Fields = "id";
-
-                await request.UploadAsync();
-
-                return request.ResponseBody.Id;
-            }
-        }
-
-        private async Task<string?> FindFileAsync(string fileName, string parentFolderId)
-        {
-            string query =
+            request.Q =
                 $"name = '{EscapeQueryValue(fileName)}' " +
-                $"and '{parentFolderId}' in parents " +
-                $"and trashed = false";
+                $"and '{folder.Id}' in parents " +
+                "and trashed = false";
 
-            var request = _driveService.Files.List();
-
-            request.Q = query;
             request.Fields = "files(id, name)";
             request.PageSize = 1;
 
-            var result = await request.ExecuteAsync();
+            var fileResult = await request.ExecuteAsync();
+            var existingFile = fileResult.Files.FirstOrDefault();
 
-            return result.Files.FirstOrDefault()?.Id;
-        }
+            await using var stream = new MemoryStream(
+                Encoding.UTF8.GetBytes(content));
 
-        private async Task<string> GetOrCreateFolderAsync(string folderName, string? parentFolderId)
-        {
-            string query =
-                $"name = '{EscapeQueryValue(folderName)}' " +
-                $"and mimeType = 'application/vnd.google-apps.folder' " +
-                $"and trashed = false";
-
-            if (parentFolderId != null)
+            if (existingFile != null)
             {
-                query += $" and '{parentFolderId}' in parents";
-            }
-            else
-            {
-                query += " and 'root' in parents";
+                var updateRequest = _driveService.Files.Update(
+                    new Google.Apis.Drive.v3.Data.File(),
+                    existingFile.Id,
+                    stream,
+                    "application/json");
+
+                updateRequest.Fields = "id";
+
+                await updateRequest.UploadAsync();
             }
 
-            var request = _driveService.Files.List();
-
-            request.Q = query;
-            request.Fields = "files(id, name)";
-            request.PageSize = 1;
-
-            var result = await request.ExecuteAsync();
-
-            var existingFolder = result.Files.FirstOrDefault();
-
-            if (existingFolder != null)
-            {
-                return existingFolder.Id;
-            }
-
-            var folderMetadata = new Google.Apis.Drive.v3.Data.File
-            {
-                Name = folderName,
-                MimeType = "application/vnd.google-apps.folder"
-            };
-
-            if (parentFolderId != null)
-            {
-                folderMetadata.Parents = new List<string>
+            var createRequest = _driveService.Files.Create(
+                new Google.Apis.Drive.v3.Data.File
                 {
-                    parentFolderId
-                };
-            }
+                    Name = fileName,
+                    Parents = [folder.Id]
+                },
+                stream,
+                "application/json");
 
-            var folder = await _driveService.Files
-                .Create(folderMetadata)
-                .ExecuteAsync();
+            createRequest.Fields = "id";
 
-            return folder.Id;
+            await createRequest.UploadAsync();
         }
 
         private static string EscapeQueryValue(string value)
