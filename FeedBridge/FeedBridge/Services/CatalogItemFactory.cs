@@ -49,7 +49,7 @@ namespace FeedBridge.Services
                 }
                 case Category.Series:
                 {
-                    var mediaInfo = await _tmdbService.SearchMovieAsync(title);
+                    var mediaInfo = await _tmdbService.SearchTvShowAsync(title);
 
                     return new SeriesCatalogItem(title, category, item.PublishedDate)
                     {
