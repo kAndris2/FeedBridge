@@ -6,6 +6,8 @@ namespace FeedBridge.Services
     {
         public string ExtractTitle(string input)
         {
+            input = Regex.Replace(input, @"\[[^\]]*\]", string.Empty);
+
             var match = Regex.Match(
                 input,
                 @"^(?<title>.+?)(?=[.\s](?:(?:19|20)\d{2}|S\d{2}(?:E\d{2})?|\d{3,4}p|BDRip|BRRip|WEBRip|WEB-DL|BluRay|HDTV|DVDRip|HDRip)\b)",
@@ -13,7 +15,9 @@ namespace FeedBridge.Services
 
             if (!match.Success)
             {
-                return input;
+                return input
+                    .Replace('.', ' ')
+                    .Trim();
             }
 
             return match.Groups["title"].Value

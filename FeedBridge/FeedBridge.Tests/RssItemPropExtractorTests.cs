@@ -7,7 +7,7 @@ namespace FeedBridge.Tests
         private readonly RssItemPropExtractor _propExtractor = new();
 
         [Theory]
-        [InlineData("This is the title", "This is the title")]
+        [InlineData("This is the title [Movie (HUN SD)]", "This is the title")]
         [InlineData("This is the title BDRip", "This is the title")]
         [InlineData("This.is.the.title.2024.BDRip.x264.Asd-Full", "This is the title")]
         [InlineData("District.9.2009.BDRip.XviD.Asd-Full", "District 9")]
