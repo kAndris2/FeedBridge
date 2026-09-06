@@ -11,18 +11,12 @@ namespace FeedBridge.Services
 
         public async Task<IEnumerable<ICatalogItem>> CreateCatalogItems(IEnumerable<Item> items)
         {
-            var catalogItems = new List<ICatalogItem>();
+            var tasks = items.Select(CreateCatalogItem);
+            var catalogItems = await Task.WhenAll(tasks);
 
-            foreach(var item in items)
-            {
-                var catalogItem = await CreateCatalogItem(item);
-
-                if (catalogItem == null) continue;
-
-                catalogItems.Add(catalogItem);
-            }
-
-            return catalogItems;
+            return catalogItems
+                .Where(x => x != null)
+                .Cast<ICatalogItem>();
         }
 
         private async Task<ICatalogItem?> CreateCatalogItem(Item item)
@@ -79,7 +73,7 @@ namespace FeedBridge.Services
                 {
                     return new CatalogItem(title, category, item.PublishedDate);
                 }
-                default: throw new InvalidDataException($"Unknown item category! ({item.Category})");
+                default: return null;
             }
         }
 
