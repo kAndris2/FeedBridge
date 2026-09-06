@@ -41,7 +41,10 @@ namespace FeedBridge.Services
 
         public string? ExtractSeasonEpisode(string input)
         {
-            var match = Regex.Match(input, @"\b(?<season>S\d{2})(?<episode>E\d{2})?\b", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+            var match = Regex.Match(
+                input,
+                @"\bS\d{2}(?:E\d{2})?(?:-S\d{2})?\b",
+                RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
 
             return match.Success
                 ? match.Value

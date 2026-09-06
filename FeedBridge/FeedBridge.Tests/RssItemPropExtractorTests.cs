@@ -53,5 +53,19 @@ namespace FeedBridge.Tests
 
             Assert.Equal(expected, result);
         }
+
+        [Theory]
+        [InlineData("This is the title S02", "S02")]
+        [InlineData("This: is the title S02", "S02")]
+        [InlineData("This: is the title S02 VHS Edition", "S02")]
+        [InlineData("This.is.the.title.S14E01.HUN.WEB-DL.H264-LEGION", "S14E01")]
+        [InlineData("This.is.the.title S02E03", "S02E03")]
+        [InlineData("Title.S01-S04.COMPLETE.BDRip.x264.Hun.Eng-Asd", "S01-S04")]
+        public void ExtractSeasonEpisode_ReturnsSeasonAndEpisode(string input, string expected)
+        {
+            var result = _propExtractor.ExtractSeasonEpisode(input);
+
+            Assert.Equal(expected, result);
+        }
     }
 }
