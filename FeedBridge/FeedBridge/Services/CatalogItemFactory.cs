@@ -1,18 +1,24 @@
-﻿using FeedBridge.Enums;
+﻿using Microsoft.Extensions.Logging;
+using FeedBridge.Enums;
 using FeedBridge.Interfaces;
 using FeedBridge.Models;
 
 namespace FeedBridge.Services
 {
-    public class CatalogItemFactory(RssItemPropExtractor rssItemPropExtractor, TmdbService tmdbService)
+    public class CatalogItemFactory(RssItemPropExtractor rssItemPropExtractor, TmdbService tmdbService, ILogger<CatalogItemFactory> logger)
     {
+        private readonly ILogger<CatalogItemFactory> _logger = logger;
         private readonly RssItemPropExtractor _rssItemPropExtractor = rssItemPropExtractor;
         private readonly TmdbService _tmdbService = tmdbService;
 
         public async Task<IEnumerable<ICatalogItem>> CreateCatalogItems(IEnumerable<Item> items)
         {
+            _logger.LogInformation("Catalog item creation is about to start...");
+
             var tasks = items.Select(CreateCatalogItem);
             var catalogItems = await Task.WhenAll(tasks);
+
+            _logger.LogInformation($"Catalog items successfully created! [{tasks.Count()}/{catalogItems.Count()}]");
 
             return catalogItems
                 .Where(x => x != null)
