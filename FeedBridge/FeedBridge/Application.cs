@@ -19,6 +19,12 @@ namespace FeedBridge
         {
             var relevantItems = CollectRelevantItemsFromFeed();
 
+            if (!relevantItems.Any())
+            {
+                _logger.LogInformation("No relevant items found in the RSS feed!");
+                return;
+            }
+
             _logger.LogInformation($"Found {relevantItems.Count()} relevant items in the RSS feed.");
 
             var catalogItems = await _factory.CreateCatalogItems(relevantItems);
