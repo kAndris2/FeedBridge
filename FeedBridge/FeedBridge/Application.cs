@@ -33,6 +33,7 @@ namespace FeedBridge
 
             return doc.Channel.Items
                 .Where(item => _ncoreSettings.CategoryFilter.Contains(item.Category))
+                .Where(item => DateTimeOffset.TryParse(item.PublishedDate, out var publishedDate) && publishedDate.Date == DateTimeOffset.Now.Date)
                 .Where(item => !item.Title.Contains("E0"));
         }
     }
