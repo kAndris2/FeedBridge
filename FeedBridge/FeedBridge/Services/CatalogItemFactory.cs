@@ -16,13 +16,23 @@ namespace FeedBridge.Services
             _logger.LogInformation("Catalog item creation is about to start...");
 
             var tasks = items.Select(CreateCatalogItem);
-            var catalogItems = await Task.WhenAll(tasks);
+            var catalogItems = (await Task.WhenAll(tasks))
+                .Where(c => c != null)
+                .Where(c => c is not VideoCatalogItem video || !string.IsNullOrEmpty(video.PosterUrl))
+                .Cast<ICatalogItem>();
+
+            if (!catalogItems.Any())
+            {
+                _logger.LogInformation("No relevant catalog items were created!");
+                return [];
+            }
 
             _logger.LogInformation($"Catalog items successfully created! [{tasks.Count()}/{catalogItems.Count()}]");
 
-            return catalogItems
-                .Where(x => x != null)
-                .Cast<ICatalogItem>();
+            if (tasks.Count() != catalogItems.Count())
+                _logger.LogInformation($"Some items were not matched with the catalog item's criteria! Affacted items count: {tasks.Count() - catalogItems.Count()}");
+
+            return catalogItems;
         }
 
         private async Task<ICatalogItem?> CreateCatalogItem(Item item)

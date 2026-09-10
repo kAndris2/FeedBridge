@@ -29,6 +29,9 @@ namespace FeedBridge
             _logger.LogInformation($"Found {relevantItems.Count()} relevant items in the RSS feed.");
 
             var catalogItems = await _factory.CreateCatalogItems(relevantItems);
+
+            if (!catalogItems.Any()) return;
+
             var jsonContent = JsonSerializer.Serialize(catalogItems, new JsonSerializerOptions
             {
                 WriteIndented = true,
