@@ -19,6 +19,7 @@ namespace FeedBridge.Services
             var catalogItems = (await Task.WhenAll(tasks))
                 .Where(c => c != null)
                 .Where(c => c is not VideoCatalogItem video || !string.IsNullOrEmpty(video.PosterUrl))
+                .Where(c => c is not SeriesCatalogItem series || !string.IsNullOrEmpty(series.Season))
                 .Cast<ICatalogItem>();
 
             if (!catalogItems.Any())

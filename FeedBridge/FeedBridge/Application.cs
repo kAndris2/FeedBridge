@@ -45,6 +45,8 @@ namespace FeedBridge
 
         private async Task<IEnumerable<Item>> CollectRelevantItemsFromFeed()
         {
+            _logger.LogInformation("Collecting relevant items from RSS feed...");
+
             var content = await _rssClient.GetFeedAsync(_ncoreSettings.RssUrl);
             var doc = new XmlReader()
                 .FromString<NcoreRssDocument>(content);
