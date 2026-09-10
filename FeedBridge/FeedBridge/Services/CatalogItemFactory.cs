@@ -128,8 +128,7 @@ namespace FeedBridge.Services
                     video.Quality = string.Join(";",
                         group
                             .OfType<VideoCatalogItem>()
-                            .Select(x => x.Quality)
-                            .Where(x => !string.IsNullOrWhiteSpace(x))
+                            .Select(x => x.Quality ?? "SD")
                             .Distinct());
 
                     if (first is SeriesCatalogItem series)
