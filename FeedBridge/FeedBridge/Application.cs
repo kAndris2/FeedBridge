@@ -1,7 +1,8 @@
 ﻿using System.Text.Encodings.Web;
 using System.Text.Json;
-using Microsoft.Extensions.Options;
+using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using FeedBridge.Models;
 using FeedBridge.Models.Configuration;
 using FeedBridge.Services;
@@ -51,7 +52,7 @@ namespace FeedBridge
             return doc.Channel.Items
                 .Where(item => _ncoreSettings.CategoryFilter.Contains(item.Category))
                 .Where(item => DateTimeOffset.TryParse(item.PublishedDate, out var publishedDate) && publishedDate.Date == DateTimeOffset.Now.Date)
-                .Where(item => !item.Title.Contains("E0"));
+                .Where(item => !Regex.IsMatch(item.Title, @"\b(?:S\d{2}E\d{2}|E\d{2})\b", RegexOptions.IgnoreCase));
         }
     }
 }
