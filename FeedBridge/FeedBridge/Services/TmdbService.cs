@@ -21,6 +21,32 @@ namespace FeedBridge.Services
             _logger = logger;
         }
 
+        public async Task<List<Genre>> GetMovieGenresAsync()
+        {
+            try
+            {
+                return (await _client.GetMovieGenresAsync()) ?? [];
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Unsuccessful movie genre retrieval! - Ex.: {ex.Message}");
+                return [];
+            }
+        }
+
+        public async Task<List<Genre>> GetTvGenresAsync()
+        {
+            try
+            {
+                return (await _client.GetTvGenresAsync()) ?? [];
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Unsuccessful tv genre retrieval! - Ex.: {ex.Message}");
+                return [];
+            }
+        }
+
         public async Task<TmdbMediaInfo?> SearchMovieAsync(string title, int year = 0)
         {
             try
@@ -65,12 +91,12 @@ namespace FeedBridge.Services
                     ?? throw new InvalidDataException("The selected search result is null!");
 
                 if (media.PosterPath == null)
-                    return new TmdbMediaInfo(null, media.VoteAverage);
+                    return new TmdbMediaInfo(null, media.VoteAverage, media.GenreIds ?? []);
 
                 await _configInitTask;
                 var posterUrl = _client.GetImageUrl("w500", media.PosterPath);
 
-                return new TmdbMediaInfo(posterUrl.AbsoluteUri, media.VoteAverage);
+                return new TmdbMediaInfo(posterUrl.AbsoluteUri, media.VoteAverage, media.GenreIds ?? []);
             }
             catch (Exception ex)
             {

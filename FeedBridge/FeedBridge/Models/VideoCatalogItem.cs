@@ -7,5 +7,6 @@ namespace FeedBridge.Models
         public required string? Quality { get; set; }
         public required string? PosterUrl { get; init; }
         public required double? Rate { get; init; }
+        public required string[] Genres { get; init; }
     }
 }

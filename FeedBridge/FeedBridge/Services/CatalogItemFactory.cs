@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using TMDbLib.Objects.General;
 using FeedBridge.Enums;
 using FeedBridge.Interfaces;
 using FeedBridge.Models;
@@ -11,9 +12,15 @@ namespace FeedBridge.Services
         private readonly RssItemPropExtractor _rssItemPropExtractor = rssItemPropExtractor;
         private readonly TmdbService _tmdbService = tmdbService;
 
+        private List<Genre> _movieGenres;
+        private List<Genre> _tvGenres;
+
         public async Task<IEnumerable<ICatalogItem>> CreateCatalogItems(IEnumerable<Item> items)
         {
             _logger.LogInformation("Catalog item creation is about to start...");
+
+            _movieGenres = await _tmdbService.GetMovieGenresAsync();
+            _tvGenres = await _tmdbService.GetTvGenresAsync();
 
             var tasks = items.Select(CreateCatalogItem);
             var catalogItems = (await Task.WhenAll(tasks))
@@ -55,7 +62,11 @@ namespace FeedBridge.Services
                         Language = _rssItemPropExtractor.GuessLanguage(item.Title),
                         ReleaseYear = releaseYear,
                         PosterUrl = mediaInfo?.PosterUrl,
-                        Rate = mediaInfo?.Rate
+                        Rate = mediaInfo?.Rate,
+                        Genres = mediaInfo != null ? _movieGenres
+                            .Where(g => mediaInfo.GenreIds.Contains(g.Id))
+                            .Select(g => g?.Name)
+                            .ToArray() : []
                     };
                 }
                 case Category.Series:
@@ -68,7 +79,11 @@ namespace FeedBridge.Services
                         Language = _rssItemPropExtractor.GuessLanguage(item.Title),
                         Season = _rssItemPropExtractor.ExtractSeasonEpisode(item.Title),
                         PosterUrl = mediaInfo?.PosterUrl,
-                        Rate = mediaInfo?.Rate
+                        Rate = mediaInfo?.Rate,
+                        Genres = mediaInfo != null ? _tvGenres
+                            .Where(g => mediaInfo.GenreIds.Contains(g.Id))
+                            .Select(g => g?.Name)
+                            .ToArray() : []
                     };
                 }
                 case Category.Music:
