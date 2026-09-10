@@ -9,8 +9,7 @@ namespace FeedBridge.Services.Validators
             var requiredSingleFields = new List<string>()
             {
                 nameof(config.Url),
-                nameof(config.PassKey),
-                nameof(config.FeedLocation)
+                nameof(config.PassKey)
             };
 
             CheckSingleFields<NcoreSettings>(requiredSingleFields, config);

@@ -28,6 +28,8 @@ try
     builder.Services.AddScoped<GoogleDriveService>();
     builder.Services.AddScoped<Application>();
 
+    builder.Services.AddHttpClient<RssClient>();
+
     using var host = builder.Build();
     using var scope = host.Services.CreateScope();
 
