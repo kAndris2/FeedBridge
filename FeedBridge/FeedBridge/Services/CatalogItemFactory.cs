@@ -32,7 +32,7 @@ namespace FeedBridge.Services
             if (tasks.Count() != catalogItems.Count())
                 _logger.LogInformation($"Some items were not matched with the catalog item's criteria! Affacted items count: {tasks.Count() - catalogItems.Count()}");
 
-            return catalogItems;
+            return MergeCatalogItems(catalogItems);
         }
 
         private async Task<ICatalogItem?> CreateCatalogItem(Item item)
@@ -93,7 +93,7 @@ namespace FeedBridge.Services
             }
         }
 
-        private Category? GuessCategory(string category)
+        private static Category? GuessCategory(string category)
         {
             var categoryKeywordPairs = new Dictionary<string[], Category>()
             {
@@ -114,6 +114,36 @@ namespace FeedBridge.Services
             }
 
             return null;
+        }
+
+        private static IEnumerable<ICatalogItem> MergeCatalogItems(IEnumerable<ICatalogItem> items)
+        {
+            foreach (var group in items.GroupBy(x => new { x.Category, x.Title }))
+            {
+                var first = group.First();
+
+                if (first is VideoCatalogItem video)
+                {
+                    video.Quality = string.Join(";",
+                        group
+                            .OfType<VideoCatalogItem>()
+                            .Select(x => x.Quality)
+                            .Where(x => !string.IsNullOrWhiteSpace(x))
+                            .Distinct());
+
+                    if (first is SeriesCatalogItem series)
+                    {
+                        series.Season = string.Join(";",
+                            group
+                                .OfType<SeriesCatalogItem>()
+                                .Select(x => x.Season)
+                                .Where(x => !string.IsNullOrWhiteSpace(x))
+                                .Distinct());
+                    }
+                }
+
+                yield return first;
+            }
         }
     }
 }
