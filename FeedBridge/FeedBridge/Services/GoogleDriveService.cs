@@ -5,6 +5,7 @@ using Google.Apis.Drive.v3;
 using Google.Apis.Services;
 using Google.Apis.Util.Store;
 using FeedBridge.Models.Configuration;
+using FeedBridge.Models;
 
 namespace FeedBridge.Services
 {
@@ -12,6 +13,7 @@ namespace FeedBridge.Services
     {
         private readonly GoogleDriveSettings _driveSettings;
         private readonly DriveService _driveService;
+        private readonly StorageInfo _storageInfo;
 
         public GoogleDriveService(IOptions<GoogleCredentials> credentials, IOptions<GoogleDriveSettings> driveSettings)
         {
@@ -37,33 +39,32 @@ namespace FeedBridge.Services
             {
                 HttpClientInitializer = credential
             });
+
+            _storageInfo = FetchStorageInfo().Result;
         }
 
         public async Task UploadJsonAsync(string content)
         {
-            var folderId = await FindStorageFolderId();
-            var storageFileId = await FindStorageFileId(folderId);
-
             await using var stream = new MemoryStream(
                 Encoding.UTF8.GetBytes(content));
 
-            if (storageFileId != null)
+            if (_storageInfo.FileId != null)
             {
-                await UpdateStorageFile(storageFileId, stream);
+                await UpdateStorageFile(stream);
             }
             else
             {
-                await CreateStorageFile(folderId, stream);
+                await CreateStorageFile(stream);
             }
         }
 
-        private async Task CreateStorageFile(string parentFolderId, MemoryStream stream)
+        private async Task CreateStorageFile(MemoryStream stream)
         {
             var createRequest = _driveService.Files.Create(
                 new Google.Apis.Drive.v3.Data.File
                 {
                     Name = _driveSettings.JsonFileName,
-                    Parents = [parentFolderId]
+                    Parents = [_storageInfo.FolderId]
                 },
                 stream,
                 "application/json");
@@ -73,17 +74,25 @@ namespace FeedBridge.Services
             await createRequest.UploadAsync();
         }
 
-        private async Task UpdateStorageFile(string storageFileId, MemoryStream stream)
+        private async Task UpdateStorageFile(MemoryStream stream)
         {
             var updateRequest = _driveService.Files.Update(
                 new Google.Apis.Drive.v3.Data.File(),
-                storageFileId,
+                _storageInfo.FileId,
                 stream,
                 "application/json");
 
             updateRequest.Fields = "id";
 
             await updateRequest.UploadAsync();
+        }
+
+        private async Task<StorageInfo> FetchStorageInfo()
+        {
+            var folderId = await FindStorageFolderId();
+            var storageFileId = await FindStorageFileId(folderId);
+
+            return new StorageInfo(folderId, storageFileId);
         }
 
         private async Task<string?> FindStorageFileId(string folderId)
