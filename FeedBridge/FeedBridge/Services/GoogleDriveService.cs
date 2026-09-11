@@ -41,9 +41,8 @@ namespace FeedBridge.Services
 
         public async Task UploadJsonAsync(string content)
         {
-            var fileName = _driveSettings.JsonFileName + ".json";
             var folderId = await FindStorageFolderId();
-            var storageFileId = await FindStorageFileId(fileName, folderId);
+            var storageFileId = await FindStorageFileId(folderId);
 
             await using var stream = new MemoryStream(
                 Encoding.UTF8.GetBytes(content));
@@ -54,16 +53,16 @@ namespace FeedBridge.Services
             }
             else
             {
-                await CreateStorageFile(fileName, folderId, stream);
+                await CreateStorageFile(folderId, stream);
             }
         }
 
-        private async Task CreateStorageFile(string fileName, string parentFolderId, MemoryStream stream)
+        private async Task CreateStorageFile(string parentFolderId, MemoryStream stream)
         {
             var createRequest = _driveService.Files.Create(
                 new Google.Apis.Drive.v3.Data.File
                 {
-                    Name = fileName,
+                    Name = _driveSettings.JsonFileName,
                     Parents = [parentFolderId]
                 },
                 stream,
@@ -87,12 +86,12 @@ namespace FeedBridge.Services
             await updateRequest.UploadAsync();
         }
 
-        private async Task<string?> FindStorageFileId(string fileName, string folderId)
+        private async Task<string?> FindStorageFileId(string folderId)
         {
             var request = _driveService.Files.List();
 
             request.Q =
-                $"name = '{EscapeQueryValue(fileName)}' " +
+                $"name = '{EscapeQueryValue(_driveSettings.JsonFileName)}' " +
                 $"and '{folderId}' in parents " +
                 "and trashed = false";
 
