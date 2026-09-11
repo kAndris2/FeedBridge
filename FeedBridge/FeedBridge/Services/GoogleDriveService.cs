@@ -42,6 +42,70 @@ namespace FeedBridge.Services
         public async Task UploadJsonAsync(string content)
         {
             var fileName = _driveSettings.JsonFileName + ".json";
+            var folderId = await FindStorageFolderId();
+            var storageFileId = await FindStorageFileId(fileName, folderId);
+
+            await using var stream = new MemoryStream(
+                Encoding.UTF8.GetBytes(content));
+
+            if (storageFileId != null)
+            {
+                await UpdateStorageFile(storageFileId, stream);
+            }
+            else
+            {
+                await CreateStorageFile(fileName, folderId, stream);
+            }
+        }
+
+        private async Task CreateStorageFile(string fileName, string parentFolderId, MemoryStream stream)
+        {
+            var createRequest = _driveService.Files.Create(
+                new Google.Apis.Drive.v3.Data.File
+                {
+                    Name = fileName,
+                    Parents = [parentFolderId]
+                },
+                stream,
+                "application/json");
+
+            createRequest.Fields = "id";
+
+            await createRequest.UploadAsync();
+        }
+
+        private async Task UpdateStorageFile(string storageFileId, MemoryStream stream)
+        {
+            var updateRequest = _driveService.Files.Update(
+                new Google.Apis.Drive.v3.Data.File(),
+                storageFileId,
+                stream,
+                "application/json");
+
+            updateRequest.Fields = "id";
+
+            await updateRequest.UploadAsync();
+        }
+
+        private async Task<string?> FindStorageFileId(string fileName, string folderId)
+        {
+            var request = _driveService.Files.List();
+
+            request.Q =
+                $"name = '{EscapeQueryValue(fileName)}' " +
+                $"and '{folderId}' in parents " +
+                "and trashed = false";
+
+            request.Fields = "files(id, name)";
+            request.PageSize = 1;
+
+            var fileResult = await request.ExecuteAsync();
+            
+            return fileResult.Files.FirstOrDefault()?.Id;
+        }
+
+        private async Task<string> FindStorageFolderId()
+        {
             var request = _driveService.Files.List();
 
             request.Q =
@@ -53,48 +117,10 @@ namespace FeedBridge.Services
             request.PageSize = 1;
 
             var folderResult = await request.ExecuteAsync();
-            var folder = folderResult.Files.FirstOrDefault() ?? throw new DirectoryNotFoundException($"Google Drive folder not found: {_driveSettings.TargetFolder}");
-            request = _driveService.Files.List();
+            var folder = folderResult.Files.FirstOrDefault() 
+                ?? throw new DirectoryNotFoundException($"Google Drive folder not found: {_driveSettings.TargetFolder}");
 
-            request.Q =
-                $"name = '{EscapeQueryValue(fileName)}' " +
-                $"and '{folder.Id}' in parents " +
-                "and trashed = false";
-
-            request.Fields = "files(id, name)";
-            request.PageSize = 1;
-
-            var fileResult = await request.ExecuteAsync();
-            var existingFile = fileResult.Files.FirstOrDefault();
-
-            await using var stream = new MemoryStream(
-                Encoding.UTF8.GetBytes(content));
-
-            if (existingFile != null)
-            {
-                var updateRequest = _driveService.Files.Update(
-                    new Google.Apis.Drive.v3.Data.File(),
-                    existingFile.Id,
-                    stream,
-                    "application/json");
-
-                updateRequest.Fields = "id";
-
-                await updateRequest.UploadAsync();
-            }
-
-            var createRequest = _driveService.Files.Create(
-                new Google.Apis.Drive.v3.Data.File
-                {
-                    Name = fileName,
-                    Parents = [folder.Id]
-                },
-                stream,
-                "application/json");
-
-            createRequest.Fields = "id";
-
-            await createRequest.UploadAsync();
+            return folder.Id;
         }
 
         private static string EscapeQueryValue(string value)
