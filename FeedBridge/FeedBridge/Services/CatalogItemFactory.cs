@@ -22,23 +22,26 @@ namespace FeedBridge.Services
             _movieGenres = await _tmdbService.GetMovieGenresAsync();
             _tvGenres = await _tmdbService.GetTvGenresAsync();
 
-            var tasks = items.Select(CreateCatalogItem);
+            var tasks = items
+                .Select(CreateCatalogItem)
+                .ToArray();
             var catalogItems = (await Task.WhenAll(tasks))
                 .Where(c => c != null)
                 .Where(c => c is not VideoCatalogItem video || !string.IsNullOrEmpty(video.PosterUrl))
                 .Where(c => c is not SeriesCatalogItem series || !string.IsNullOrEmpty(series.Season))
-                .Cast<ICatalogItem>();
+                .Cast<ICatalogItem>()
+                .ToArray();
 
-            if (!catalogItems.Any())
+            if (catalogItems.Length == 0)
             {
                 _logger.LogInformation("No relevant catalog items were created!");
                 return [];
             }
 
-            _logger.LogInformation($"Catalog items successfully created! [{tasks.Count()}/{catalogItems.Count()}]");
+            _logger.LogInformation($"Catalog items successfully created! [{tasks.Length}/{catalogItems.Length}]");
 
-            if (tasks.Count() != catalogItems.Count())
-                _logger.LogInformation($"Some items were not matched with the catalog item's criteria! Affacted items count: {tasks.Count() - catalogItems.Count()}");
+            if (tasks.Length != catalogItems.Length)
+                _logger.LogInformation($"Some items were not matched with the catalog item's criteria! Affacted items count: {tasks.Length - catalogItems.Length}");
 
             return MergeCatalogItems(catalogItems);
         }
@@ -132,7 +135,7 @@ namespace FeedBridge.Services
             return null;
         }
 
-        private static IEnumerable<ICatalogItem> MergeCatalogItems(IEnumerable<ICatalogItem> items)
+        private static IEnumerable<ICatalogItem> MergeCatalogItems(ICatalogItem[] items)
         {
             foreach (var group in items.GroupBy(x => new { x.Category, x.Title }))
             {
