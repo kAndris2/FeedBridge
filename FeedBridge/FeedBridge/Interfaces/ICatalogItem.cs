@@ -4,11 +4,12 @@ using FeedBridge.Models;
 
 namespace FeedBridge.Interfaces
 {
-    [JsonDerivedType(typeof(MovieCatalogItem))]
-    [JsonDerivedType(typeof(SeriesCatalogItem))]
-    [JsonDerivedType(typeof(MusicCatalogItem))]
-    [JsonDerivedType(typeof(LanguageCatalogItem))]
-    [JsonDerivedType(typeof(CatalogItem))]
+    [JsonPolymorphic(TypeDiscriminatorPropertyName = "$type")]
+    [JsonDerivedType(typeof(MovieCatalogItem), "movie")]
+    [JsonDerivedType(typeof(SeriesCatalogItem), "series")]
+    [JsonDerivedType(typeof(MusicCatalogItem), "music")]
+    [JsonDerivedType(typeof(LanguageCatalogItem), "language")]
+    [JsonDerivedType(typeof(CatalogItem), "catalog")]
     public interface ICatalogItem
     {
         public string Title { get; set; }

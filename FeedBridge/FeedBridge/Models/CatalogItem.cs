@@ -3,10 +3,10 @@ using FeedBridge.Interfaces;
 
 namespace FeedBridge.Models
 {
-    public class CatalogItem(string title, Category? category, string publishedDate) : ICatalogItem
+    public class CatalogItem(string title, Category? category, DateTime publishedDate) : ICatalogItem
     {
         public string Title { get; set; } = title;
         public Category? Category { get; set; } = category;
-        public DateTime PublishedDate { get; set; } = DateTime.Parse(publishedDate);
+        public DateTime PublishedDate { get; set; } = publishedDate;
     }
 }

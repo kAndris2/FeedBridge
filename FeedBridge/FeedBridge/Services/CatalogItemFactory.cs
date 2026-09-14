@@ -50,6 +50,7 @@ namespace FeedBridge.Services
         {
             var category = GuessCategory(item.Category);
             var title = _rssItemPropExtractor.ExtractTitle(item.Title);
+            var publishedDate = DateTime.Parse(item.PublishedDate);
 
             switch (category)
             {
@@ -59,7 +60,7 @@ namespace FeedBridge.Services
                     _ = int.TryParse(extractedReleaseYear, out int releaseYear);
                     var mediaInfo = await _tmdbService.SearchMovieAsync(title, releaseYear);
 
-                    return new MovieCatalogItem(title, category, item.PublishedDate)
+                    return new MovieCatalogItem(title, category, publishedDate)
                     {
                         Quality = _rssItemPropExtractor.ExtractQuality(item.Title),
                         Language = _rssItemPropExtractor.GuessLanguage(item.Title),
@@ -76,7 +77,7 @@ namespace FeedBridge.Services
                 {
                     var mediaInfo = await _tmdbService.SearchTvShowAsync(title);
 
-                    return new SeriesCatalogItem(title, category, item.PublishedDate)
+                    return new SeriesCatalogItem(title, category, publishedDate)
                     {
                         Quality = _rssItemPropExtractor.ExtractQuality(item.Title),
                         Language = _rssItemPropExtractor.GuessLanguage(item.Title),
@@ -91,7 +92,7 @@ namespace FeedBridge.Services
                 }
                 case Category.Music:
                 {
-                    return new MusicCatalogItem(title, category, item.PublishedDate)
+                    return new MusicCatalogItem(title, category, publishedDate)
                     {
                         Language = _rssItemPropExtractor.GuessLanguage(item.Title),
                         ReleaseYear = _rssItemPropExtractor.ExtractReleaseYear(item.Title)
@@ -99,14 +100,14 @@ namespace FeedBridge.Services
                 }
                 case Category.Book:
                 {
-                    return new LanguageCatalogItem(title, category, item.PublishedDate)
+                    return new LanguageCatalogItem(title, category, publishedDate)
                     {
                         Language = _rssItemPropExtractor.GuessLanguage(item.Title)
                     };
                 }
                 case Category.Game or Category.Program:
                 {
-                    return new CatalogItem(title, category, item.PublishedDate);
+                    return new CatalogItem(title, category, publishedDate);
                 }
                 default: return null;
             }
