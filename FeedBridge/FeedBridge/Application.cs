@@ -6,6 +6,7 @@ using Microsoft.Extensions.Options;
 using FeedBridge.Models;
 using FeedBridge.Models.Configuration;
 using FeedBridge.Services;
+using FeedBridge.Interfaces;
 
 namespace FeedBridge
 {
@@ -33,6 +34,14 @@ namespace FeedBridge
 
             if (!catalogItems.Any()) return;
 
+            var storedCatalogItems = await CollectRelevantCatalogItemsFromStorage();
+
+            if (storedCatalogItems.Any())
+            {
+                var mergedCatalogItemList = catalogItems.Concat(storedCatalogItems);
+                catalogItems = _factory.MergeCatalogItems(mergedCatalogItemList);
+            }
+
             var jsonContent = JsonSerializer.Serialize(catalogItems, new JsonSerializerOptions
             {
                 WriteIndented = true,
@@ -41,6 +50,14 @@ namespace FeedBridge
 
             await _driveService.UploadJsonAsync(jsonContent);
             _logger.LogInformation("Catalog items successfully uploaded on to Google Drive storage!");
+        }
+
+        private async Task<IEnumerable<ICatalogItem>> CollectRelevantCatalogItemsFromStorage()
+        {
+            var catalogItems = await _driveService.ReadJsonAsync<ICatalogItem>();
+
+            return catalogItems
+                .Where(item => item.PublishedDate.Date == DateTimeOffset.Now.Date);
         }
 
         private async Task<IEnumerable<Item>> CollectRelevantItemsFromFeed()

@@ -46,6 +46,39 @@ namespace FeedBridge.Services
             return MergeCatalogItems(catalogItems);
         }
 
+        public IEnumerable<ICatalogItem> MergeCatalogItems(IEnumerable<ICatalogItem> items)
+        {
+            foreach (var group in items.GroupBy(x => new { x.Category, x.Title }))
+            {
+                var first = group.First();
+
+                if (first is VideoCatalogItem video)
+                {
+                    video.Quality = string.Join(";",
+                        group
+                            .OfType<VideoCatalogItem>()
+                            .SelectMany(x => (x.Quality ?? "SD")
+                                .Split(';', StringSplitOptions.RemoveEmptyEntries))
+                            .Select(x => x.Trim())
+                            .Distinct(StringComparer.OrdinalIgnoreCase));
+
+                    if (first is SeriesCatalogItem series)
+                    {
+                        series.Season = string.Join(";",
+                            group
+                                .OfType<SeriesCatalogItem>()
+                                .Where(x => !string.IsNullOrWhiteSpace(x.Season))
+                                .SelectMany(x => x.Season!
+                                    .Split(';', StringSplitOptions.RemoveEmptyEntries))
+                                .Select(x => x.Trim())
+                                .Distinct(StringComparer.OrdinalIgnoreCase));
+                    }
+                }
+
+                yield return first;
+            }
+        }
+
         private async Task<ICatalogItem?> CreateCatalogItem(Item item)
         {
             var category = GuessCategory(item.Category);
@@ -134,35 +167,6 @@ namespace FeedBridge.Services
             }
 
             return null;
-        }
-
-        private static IEnumerable<ICatalogItem> MergeCatalogItems(ICatalogItem[] items)
-        {
-            foreach (var group in items.GroupBy(x => new { x.Category, x.Title }))
-            {
-                var first = group.First();
-
-                if (first is VideoCatalogItem video)
-                {
-                    video.Quality = string.Join(";",
-                        group
-                            .OfType<VideoCatalogItem>()
-                            .Select(x => x.Quality ?? "SD")
-                            .Distinct());
-
-                    if (first is SeriesCatalogItem series)
-                    {
-                        series.Season = string.Join(";",
-                            group
-                                .OfType<SeriesCatalogItem>()
-                                .Select(x => x.Season)
-                                .Where(x => !string.IsNullOrWhiteSpace(x))
-                                .Distinct());
-                    }
-                }
-
-                yield return first;
-            }
         }
     }
 }
