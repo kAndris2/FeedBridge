@@ -2,7 +2,7 @@
 
 namespace FeedBridge.Models
 {
-    public class MovieCatalogItem(string title, Category? category, DateTime publishedDate) : VideoCatalogItem(title, category, publishedDate)
+    public class MovieCatalogItem(string originalTitle, Category? category, DateTime publishedDate) : VideoCatalogItem(originalTitle, category, publishedDate)
     {
         public required int? ReleaseYear { get; init; }
     }

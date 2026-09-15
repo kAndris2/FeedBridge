@@ -48,7 +48,7 @@ namespace FeedBridge.Services
 
         public IEnumerable<ICatalogItem> MergeCatalogItems(IEnumerable<ICatalogItem> items)
         {
-            foreach (var group in items.GroupBy(x => new { x.Category, x.Title }))
+            foreach (var group in items.GroupBy(x => new { x.Category, x.OriginalTitle }))
             {
                 var first = group.First();
 
@@ -82,7 +82,7 @@ namespace FeedBridge.Services
         private async Task<ICatalogItem?> CreateCatalogItem(Item item)
         {
             var category = GuessCategory(item.Category);
-            var title = _rssItemPropExtractor.ExtractTitle(item.Title);
+            var originalTitle = _rssItemPropExtractor.ExtractTitle(item.Title);
             var publishedDate = DateTime.Parse(item.PublishedDate);
 
             switch (category)
@@ -91,15 +91,16 @@ namespace FeedBridge.Services
                 {
                     var extractedReleaseYear = _rssItemPropExtractor.ExtractReleaseYear(item.Title);
                     _ = int.TryParse(extractedReleaseYear, out int releaseYear);
-                    var mediaInfo = await _tmdbService.SearchMovieAsync(title, releaseYear);
+                    var mediaInfo = await _tmdbService.SearchMovieAsync(originalTitle, releaseYear);
 
-                    return new MovieCatalogItem(title, category, publishedDate)
+                    return new MovieCatalogItem(originalTitle, category, publishedDate)
                     {
                         Quality = _rssItemPropExtractor.ExtractQuality(item.Title),
                         Language = _rssItemPropExtractor.GuessLanguage(item.Title),
                         ReleaseYear = releaseYear,
                         PosterUrl = mediaInfo?.PosterUrl,
                         Rate = mediaInfo?.Rate,
+                        TitleInfo = mediaInfo?.TitleInfo,
                         Genres = mediaInfo != null ? _movieGenres
                             .Where(g => mediaInfo.GenreIds.Contains(g.Id))
                             .Select(g => g?.Name)
@@ -108,15 +109,16 @@ namespace FeedBridge.Services
                 }
                 case Category.Series:
                 {
-                    var mediaInfo = await _tmdbService.SearchTvShowAsync(title);
+                    var mediaInfo = await _tmdbService.SearchTvShowAsync(originalTitle);
 
-                    return new SeriesCatalogItem(title, category, publishedDate)
+                    return new SeriesCatalogItem(originalTitle, category, publishedDate)
                     {
                         Quality = _rssItemPropExtractor.ExtractQuality(item.Title),
                         Language = _rssItemPropExtractor.GuessLanguage(item.Title),
                         Season = _rssItemPropExtractor.ExtractSeasonEpisode(item.Title),
                         PosterUrl = mediaInfo?.PosterUrl,
                         Rate = mediaInfo?.Rate,
+                        TitleInfo = mediaInfo?.TitleInfo,
                         Genres = mediaInfo != null ? _tvGenres
                             .Where(g => mediaInfo.GenreIds.Contains(g.Id))
                             .Select(g => g?.Name)
@@ -125,7 +127,7 @@ namespace FeedBridge.Services
                 }
                 case Category.Music:
                 {
-                    return new MusicCatalogItem(title, category, publishedDate)
+                    return new MusicCatalogItem(originalTitle, category, publishedDate)
                     {
                         Language = _rssItemPropExtractor.GuessLanguage(item.Title),
                         ReleaseYear = _rssItemPropExtractor.ExtractReleaseYear(item.Title)
@@ -133,14 +135,14 @@ namespace FeedBridge.Services
                 }
                 case Category.Book:
                 {
-                    return new LanguageCatalogItem(title, category, publishedDate)
+                    return new LanguageCatalogItem(originalTitle, category, publishedDate)
                     {
                         Language = _rssItemPropExtractor.GuessLanguage(item.Title)
                     };
                 }
                 case Category.Game or Category.Program:
                 {
-                    return new CatalogItem(title, category, publishedDate);
+                    return new CatalogItem(originalTitle, category, publishedDate);
                 }
                 default: return null;
             }

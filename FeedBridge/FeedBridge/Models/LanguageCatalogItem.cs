@@ -2,7 +2,7 @@
 
 namespace FeedBridge.Models
 {
-    public class LanguageCatalogItem(string title, Category? category, DateTime publishedDate) : CatalogItem(title, category, publishedDate)
+    public class LanguageCatalogItem(string originalTitle, Category? category, DateTime publishedDate) : CatalogItem(originalTitle, category, publishedDate)
     {
         public required string? Language { get; init; }
     }

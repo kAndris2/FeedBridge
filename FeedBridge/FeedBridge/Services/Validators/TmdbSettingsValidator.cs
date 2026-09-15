@@ -8,7 +8,8 @@ namespace FeedBridge.Services.Validators
         {
             var requiredSingleFields = new List<string>()
             {
-                nameof(config.ApiKey)
+                nameof(config.ApiKey),
+                nameof(config.PrimaryLanguage)
             };
 
             CheckSingleFields<TmdbSettings>(requiredSingleFields, config);

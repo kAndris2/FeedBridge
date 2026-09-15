@@ -12,7 +12,7 @@ namespace FeedBridge.Interfaces
     [JsonDerivedType(typeof(CatalogItem), "catalog")]
     public interface ICatalogItem
     {
-        public string Title { get; set; }
+        public string OriginalTitle { get; set; }
         public Category? Category { get; set; }
         public DateTime PublishedDate { get; set; }
     }
