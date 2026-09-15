@@ -10,6 +10,7 @@ namespace FeedBridge.Tests
         [InlineData("This is the title [Movie (HUN SD)]", "This is the title")]
         [InlineData("This is the title BDRip", "This is the title")]
         [InlineData("This.is.the.title.2024.BDRip.x264.Asd-Full", "This is the title")]
+        [InlineData("This, is the title! 1080i", "This, is the title!")]
         [InlineData("District.9.2009.BDRip.XviD.Asd-Full", "District 9")]
         public void ExtractTitle_ReturnsTitleWithoutReleaseInformation(string input, string expected)
         {
@@ -23,6 +24,7 @@ namespace FeedBridge.Tests
         [InlineData("This.is.the.title.2024.BDRip.x264.Asd-Full", null)]
         [InlineData("This.is.the.title.2024.1080p.BDRip.x264.Asd-Full", "1080p")]
         [InlineData("This.is.the.title.2024.720p.AMZN.WEB-DL.DDP2.0.H.264.Asd-Full", "720p")]
+        [InlineData("This, is the title! 1080i", "1080i")]
         public void ExtractQuality_ReturnsOnlyQualityInformation(string input, string? expected)
         {
             var result = _propExtractor.ExtractQuality(input);
