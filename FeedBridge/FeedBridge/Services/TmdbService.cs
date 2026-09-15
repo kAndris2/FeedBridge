@@ -69,7 +69,7 @@ namespace FeedBridge.Services
             }
             catch (Exception ex)
             {
-                _logger.LogWarning($"No media info found for this movie '{title} - {year}' ! - Ex.: {ex.Message}");
+                _logger.LogWarning($"No media info found for this media '{title} - {year}' ! - Ex.: {ex.Message}");
                 return null;
             }
         }
