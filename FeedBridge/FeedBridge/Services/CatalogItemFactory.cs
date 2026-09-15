@@ -91,7 +91,7 @@ namespace FeedBridge.Services
                 {
                     var extractedReleaseYear = _rssItemPropExtractor.ExtractReleaseYear(item.Title);
                     _ = int.TryParse(extractedReleaseYear, out int releaseYear);
-                    var mediaInfo = await _tmdbService.SearchMovieAsync(originalTitle, releaseYear);
+                    var mediaInfo = await _tmdbService.SearchMultiAsync(originalTitle, releaseYear);
 
                     return new MovieCatalogItem(originalTitle, category, publishedDate)
                     {
@@ -109,7 +109,7 @@ namespace FeedBridge.Services
                 }
                 case Category.Series:
                 {
-                    var mediaInfo = await _tmdbService.SearchTvShowAsync(originalTitle);
+                    var mediaInfo = await _tmdbService.SearchMultiAsync(originalTitle);
 
                     return new SeriesCatalogItem(originalTitle, category, publishedDate)
                     {

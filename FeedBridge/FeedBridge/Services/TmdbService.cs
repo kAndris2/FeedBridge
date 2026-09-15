@@ -49,12 +49,23 @@ namespace FeedBridge.Services
             }
         }
 
-        public async Task<TmdbMediaInfo?> SearchMovieAsync(string title, int year = 0)
+        public async Task<TmdbMediaInfo?> SearchMultiAsync(string title, int year = 0)
         {
             try
             {
-                var searchResult = await _client.SearchMovieAsync(title, year: year);
-                return await CreateTmdbMediaInfo(searchResult);
+                var searchResult = await _client.SearchMultiAsync(title, year: year); 
+                
+                if (searchResult == null)
+                    throw new InvalidDataException("The search result is null!");
+
+                if (searchResult.Results == null || searchResult.Results.Count == 0)
+                    throw new InvalidOperationException("The search result contains no items!");
+
+                return await CreateTmdbMediaInfo(searchResult
+                    .Results
+                    .Where(r => r is SearchMovieTvBase)
+                    .OfType<SearchMovieTvBase>()
+                    .ToList());
             }
             catch (Exception ex)
             {
@@ -63,36 +74,14 @@ namespace FeedBridge.Services
             }
         }
 
-        public async Task<TmdbMediaInfo?> SearchTvShowAsync(string title)
+        private async Task<TmdbMediaInfo> CreateTmdbMediaInfo(List<SearchMovieTvBase> searchResult)
         {
             try
             {
-                var searchResult = await _client.SearchTvShowAsync(title);
-                return await CreateTmdbMediaInfo(searchResult);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning($"No media info found for this tv show '{title}'! - Ex.: {ex.Message}");
-                return null;
-            }
-        }
-
-        private async Task<TmdbMediaInfo> CreateTmdbMediaInfo<T>(SearchContainer<T>? searchResult)
-            where T : SearchMovieTvBase
-        {
-            try
-            {
-                if (searchResult == null)
-                    throw new InvalidDataException("The search result is null!");
-
-                if (searchResult.Results == null || searchResult.Results.Count == 0)
-                    throw new InvalidOperationException("The search result contains no items!");
-
-                var media = searchResult.Results
-                    .FirstOrDefault(mItem => mItem != null)
+                var media = searchResult.FirstOrDefault(mItem => mItem != null)
                     ?? throw new InvalidDataException("The selected search result is null!");
 
-                var titleInfo = await GetTmdbMediaTitleInfo<T>(media.Id);
+                var titleInfo = await GetTmdbMediaTitleInfo(media.Id, media.MediaType);
 
                 if (media.PosterPath == null)
                     return new TmdbMediaInfo(media.VoteAverage, media.GenreIds, titleInfo);
@@ -108,18 +97,17 @@ namespace FeedBridge.Services
             }
         }
 
-        private async Task<TmdbMediaTitleInfo?> GetTmdbMediaTitleInfo<T>(int mediaId)
-            where T : SearchMovieTvBase
+        private async Task<TmdbMediaTitleInfo?> GetTmdbMediaTitleInfo(int mediaId, MediaType mediaType)
         {
             try
             {
                 TmdbMediaTitleInfo? titleInfo = null;
 
-                if (typeof(T) == typeof(SearchMovie))
+                if (mediaType == MediaType.Movie)
                 {
                     titleInfo = await GetMovieTitleInfo(mediaId);
                 }
-                else if (typeof(T) == typeof(SearchTv))
+                else if (mediaType == MediaType.Tv)
                 {
                     titleInfo = await GetTvShowTitleInfo(mediaId);
                 }
