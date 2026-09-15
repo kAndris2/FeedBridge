@@ -5,6 +5,7 @@ using TMDbLib.Objects.General;
 using TMDbLib.Objects.Search;
 using FeedBridge.Models;
 using FeedBridge.Models.Configuration;
+using FeedBridge.Enums;
 
 namespace FeedBridge.Services
 {
@@ -49,7 +50,7 @@ namespace FeedBridge.Services
             }
         }
 
-        public async Task<TmdbMediaInfo?> SearchMultiAsync(string title, int year = 0)
+        public async Task<TmdbMediaInfo?> SearchMultiAsync(string title, Category? category, int year = 0)
         {
             try
             {
@@ -65,7 +66,7 @@ namespace FeedBridge.Services
                     .Results
                     .Where(r => r is SearchMovieTvBase)
                     .OfType<SearchMovieTvBase>()
-                    .ToList());
+                    .ToList(), category, year);
             }
             catch (Exception ex)
             {
@@ -74,13 +75,11 @@ namespace FeedBridge.Services
             }
         }
 
-        private async Task<TmdbMediaInfo> CreateTmdbMediaInfo(List<SearchMovieTvBase> searchResult)
+        private async Task<TmdbMediaInfo> CreateTmdbMediaInfo(List<SearchMovieTvBase> searchResult, Category? category, int year)
         {
             try
             {
-                var media = searchResult.FirstOrDefault(mItem => mItem != null)
-                    ?? throw new InvalidDataException("The selected search result is null!");
-
+                var media = FindRelevantMedia(searchResult, category, year);
                 var titleInfo = await GetTmdbMediaTitleInfo(media.Id, media.MediaType);
 
                 if (media.PosterPath == null)
@@ -159,6 +158,34 @@ namespace FeedBridge.Services
                 ?.Data?.Name;
 
             return (string.IsNullOrEmpty(primaryTitle) && string.IsNullOrEmpty(secondaryTitle)) ? null : new TmdbMediaTitleInfo(primaryTitle, secondaryTitle);
+        }
+
+        private static SearchMovieTvBase FindRelevantMedia(List<SearchMovieTvBase> searchResult, Category? category, int year)
+        {
+            var mediaType = category switch
+            {
+                Category.Movie => MediaType.Movie,
+                Category.Series => MediaType.Tv,
+                _ => throw new InvalidDataException($"Invalid category at media selection! - Category: {category}")
+            };
+
+            var relevantSearchResults = searchResult
+                .Where(r => r != null)
+                .Where(r => r.MediaType == mediaType);
+
+            if (relevantSearchResults == null || !relevantSearchResults.Any())
+                throw new InvalidDataException($"No relevant search result found by category '{category}'!");
+            
+            if (mediaType == MediaType.Movie)
+            {
+                var mediaByReleaseYear = relevantSearchResults
+                    .Cast<SearchMovie>()
+                    .FirstOrDefault(r => r.ReleaseDate.Value.Year == year);
+
+                return mediaByReleaseYear ?? relevantSearchResults.First();
+            }
+
+            return relevantSearchResults.First();
         }
     }
 }
