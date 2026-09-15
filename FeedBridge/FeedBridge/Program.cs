@@ -12,6 +12,9 @@ using FeedBridge.Services.Validators;
 
 try
 {
+    LogManager.GetCurrentClassLogger()
+        .Info("Application started!");
+
     var configValidators = GetConfigValidators();
     var builder = Host.CreateApplicationBuilder(args);
     builder.Logging.ClearProviders();
@@ -44,6 +47,8 @@ catch (Exception ex)
 }
 finally
 {
+    LogManager.GetCurrentClassLogger()
+        .Info("Application has finished processing.");
     LogManager.Shutdown();
 }
 
