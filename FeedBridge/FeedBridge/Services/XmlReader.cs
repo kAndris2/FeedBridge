@@ -19,5 +19,11 @@ namespace FeedBridge.Services
 
             return (T)serializer.Deserialize(reader)!;
         }
+
+        public T FromFile<T>(string filePath)
+        {
+            var content = File.ReadAllText(filePath);
+            return FromString<T>(content);
+        }
     }
 }

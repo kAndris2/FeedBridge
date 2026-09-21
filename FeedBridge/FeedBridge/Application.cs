@@ -64,9 +64,13 @@ namespace FeedBridge
         {
             _logger.LogInformation("Collecting relevant items from RSS feed...");
 
+            /*
             var content = await _rssClient.GetFeedAsync(_ncoreSettings.RssUrl);
             var doc = new XmlReader()
                 .FromString<NcoreRssDocument>(content);
+            */
+            var doc = new XmlReader()
+                .FromFile<NcoreRssDocument>(_ncoreSettings.RssFilePath);
 
             return doc.Channel.Items
                 .Where(item => _ncoreSettings.CategoryFilter.Contains(item.Category))
