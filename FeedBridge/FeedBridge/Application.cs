@@ -3,10 +3,10 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using FeedBridge.Interfaces;
 using FeedBridge.Models;
 using FeedBridge.Models.Configuration;
 using FeedBridge.Services;
-using FeedBridge.Interfaces;
 
 namespace FeedBridge
 {
@@ -75,7 +75,8 @@ namespace FeedBridge
             return doc.Channel.Items
                 .Where(item => _ncoreSettings.CategoryFilter.Contains(item.Category))
                 .Where(item => DateTimeOffset.TryParse(item.PublishedDate, out var publishedDate) && publishedDate.Date == DateTimeOffset.Now.Date)
-                .Where(item => !Regex.IsMatch(item.Title, @"\b(?:S\d{2}E\d{2}|E\d{2})\b", RegexOptions.IgnoreCase));
+                .Where(item => !Regex.IsMatch(item.Title, @"\b(?:S\d{2}E\d{2}|E\d{2})\b", RegexOptions.IgnoreCase))
+                .Where(item => !_ncoreSettings.TitleKeyBlackList.Any(pair => item.Title.Contains(pair.Key, StringComparison.OrdinalIgnoreCase) && pair.Value.Any(value => item.Title.Contains(value, StringComparison.OrdinalIgnoreCase))));
         }
     }
 }
