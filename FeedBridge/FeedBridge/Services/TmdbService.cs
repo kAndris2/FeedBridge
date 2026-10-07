@@ -54,19 +54,31 @@ namespace FeedBridge.Services
         {
             try
             {
-                var searchResult = await _client.SearchMultiAsync(title, year: year); 
-                
-                if (searchResult == null)
-                    throw new InvalidDataException("The search result is null!");
+                SearchContainer<SearchBase>? searchResult = null;
+                SearchMovieTvBase? media = null;
+                int currentPage = 1;
 
-                if (searchResult.Results == null || searchResult.Results.Count == 0)
-                    throw new InvalidOperationException("The search result contains no items!");
+                while (media == null && currentPage <= (searchResult?.TotalPages ?? 1))
+                {
+                    _logger.LogInformation($"Fetching media... - Title: {title} | Year: {year} | Page: {currentPage}");
 
-                return await CreateTmdbMediaInfo(searchResult
-                    .Results
-                    .Where(r => r is SearchMovieTvBase)
-                    .OfType<SearchMovieTvBase>()
-                    .ToList(), category, year);
+                    searchResult = await _client.SearchMultiAsync(title, currentPage, year: year) 
+                        ?? throw new InvalidDataException("The search result is null!");
+
+                    if (searchResult.Results == null || searchResult.Results.Count == 0)
+                        throw new InvalidOperationException("The search result contains no items!");
+
+                    media = FindRelevantMedia([.. searchResult
+                        .Results
+                        .OfType<SearchMovieTvBase>()], category, year);
+
+                    currentPage++;
+                }
+
+                if (media == null)
+                    throw new InvalidDataException($"No relevant media found in the whole collection! Checked pages: {currentPage}/{searchResult?.TotalPages}");
+
+                return await CreateTmdbMediaInfo(media, category, year);
             }
             catch (Exception ex)
             {
@@ -75,11 +87,10 @@ namespace FeedBridge.Services
             }
         }
 
-        private async Task<TmdbMediaInfo> CreateTmdbMediaInfo(List<SearchMovieTvBase> searchResult, Category? category, int year)
+        private async Task<TmdbMediaInfo> CreateTmdbMediaInfo(SearchMovieTvBase media, Category? category, int year)
         {
             try
             {
-                var media = FindRelevantMedia(searchResult, category, year);
                 var titleInfo = await GetTmdbMediaTitleInfo(media.Id, media.MediaType);
 
                 if (media.PosterPath == null)
@@ -160,7 +171,7 @@ namespace FeedBridge.Services
             return (string.IsNullOrEmpty(primaryTitle) && string.IsNullOrEmpty(secondaryTitle)) ? null : new TmdbMediaTitleInfo(primaryTitle, secondaryTitle);
         }
 
-        private static SearchMovieTvBase FindRelevantMedia(List<SearchMovieTvBase> searchResult, Category? category, int year)
+        private static SearchMovieTvBase? FindRelevantMedia(List<SearchMovieTvBase> searchResult, Category? category, int year)
         {
             var mediaType = category switch
             {
@@ -182,7 +193,7 @@ namespace FeedBridge.Services
                     .Cast<SearchMovie>()
                     .FirstOrDefault(r => r.ReleaseDate.Value.Year == year);
 
-                return mediaByReleaseYear ?? relevantSearchResults.First();
+                return mediaByReleaseYear;
             }
 
             return relevantSearchResults.First();
