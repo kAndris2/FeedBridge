@@ -60,7 +60,7 @@ namespace FeedBridge.Services
 
                 while (media == null && currentPage <= (searchResult?.TotalPages ?? 1))
                 {
-                    _logger.LogInformation($"Fetching media... - Title: {title} | Year: {year} | Page: {currentPage}");
+                    _logger.LogInformation($"Searching media... - Title: {title} | Year: {year} | Page: {currentPage}");
 
                     searchResult = await _client.SearchMultiAsync(title, currentPage, year: year) 
                         ?? throw new InvalidDataException("The search result is null!");
