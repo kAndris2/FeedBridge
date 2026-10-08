@@ -38,7 +38,7 @@ namespace FeedBridge
 
             var storedCatalogItems = await CollectRelevantCatalogItemsFromStorage();
 
-            _logger.LogInformation($"Found {storedCatalogItems.Count} catalog items in the storage.");
+            _logger.LogInformation($"Found {storedCatalogItems.Count} relevant catalog items in the storage.");
 
             if (storedCatalogItems.Count != 0)
             {
