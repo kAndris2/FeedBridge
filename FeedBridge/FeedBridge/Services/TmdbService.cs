@@ -15,7 +15,7 @@ namespace FeedBridge.Services
         private readonly TmdbSettings _settings;
         private readonly TMDbClient _client;
         private readonly Task _configInitTask;
-        private readonly IDictionary<string, TmdbMediaInfo> _mediaInfoCache = new Dictionary<string, TmdbMediaInfo>();
+        private readonly Dictionary<string, TmdbMediaInfo> _mediaInfoCache = [];
 
         public TmdbService(IOptions<TmdbSettings> settings, ILogger<TmdbService> logger)
         {
