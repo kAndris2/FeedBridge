@@ -30,7 +30,7 @@ namespace FeedBridge
 
             _logger.LogInformation($"Found {relevantItems.Count()} relevant items in the RSS feed.");
 
-            var catalogItems = await _factory.CreateCatalogItems(relevantItems);
+            var catalogItems = await _factory.CreateCatalogItems(relevantItems, _ncoreSettings.MinimumMovieReleaseYearFilter);
 
             if (!catalogItems.Any()) return;
 

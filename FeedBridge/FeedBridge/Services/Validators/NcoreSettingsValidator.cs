@@ -11,6 +11,8 @@ namespace FeedBridge.Services.Validators
                 nameof(config.RssUrl)
             };
 
+            if (string.IsNullOrEmpty(config.RssUrl) && !string.IsNullOrEmpty(config.RssFilePath)) return;
+
             CheckSingleFields<NcoreSettings>(requiredSingleFields, config);
         }
 

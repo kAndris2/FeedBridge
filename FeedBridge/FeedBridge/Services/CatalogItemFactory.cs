@@ -15,7 +15,7 @@ namespace FeedBridge.Services
         private List<Genre> _movieGenres;
         private List<Genre> _tvGenres;
 
-        public async Task<List<ICatalogItem>> CreateCatalogItems(IEnumerable<Item> items)
+        public async Task<List<ICatalogItem>> CreateCatalogItems(IEnumerable<Item> items, int minimumMovieReleaseYearFilter)
         {
             _logger.LogInformation("Catalog item creation is about to start...");
 
@@ -23,7 +23,7 @@ namespace FeedBridge.Services
             _tvGenres = await _tmdbService.GetTvGenresAsync();
 
             var tasks = items
-                .Select(CreateCatalogItem)
+                .Select(item => CreateCatalogItem(item, minimumMovieReleaseYearFilter))
                 .ToArray();
             var catalogItems = (await Task.WhenAll(tasks))
                 .Where(c => c != null)
@@ -82,7 +82,7 @@ namespace FeedBridge.Services
             }
         }
 
-        private async Task<ICatalogItem?> CreateCatalogItem(Item item)
+        private async Task<ICatalogItem?> CreateCatalogItem(Item item, int minimumMovieReleaseYearFilter)
         {
             var category = GuessCategory(item.Category);
             var originalTitle = _rssItemPropExtractor.ExtractTitle(item.Title);
@@ -94,6 +94,9 @@ namespace FeedBridge.Services
                 {
                     var extractedReleaseYear = _rssItemPropExtractor.ExtractReleaseYear(item.Title);
                     _ = int.TryParse(extractedReleaseYear, out int releaseYear);
+
+                    if (releaseYear < minimumMovieReleaseYearFilter) return null;
+
                     var mediaInfo = await _tmdbService.SearchMultiAsync(originalTitle, category, releaseYear);
 
                     return new MovieCatalogItem(originalTitle, category, publishedDate)
