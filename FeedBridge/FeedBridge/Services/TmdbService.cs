@@ -78,6 +78,8 @@ namespace FeedBridge.Services
                 if (media == null)
                     throw new InvalidDataException($"No relevant media found in the whole collection! Checked pages: {currentPage}/{searchResult?.TotalPages}");
 
+                _logger.LogInformation("Media found.");
+
                 return await CreateTmdbMediaInfo(media, category, year);
             }
             catch (Exception ex)
@@ -91,6 +93,8 @@ namespace FeedBridge.Services
         {
             try
             {
+                _logger.LogInformation("Collecting media meta data...");
+
                 var titleInfo = await GetTmdbMediaTitleInfo(media.Id, media.MediaType);
 
                 if (media.PosterPath == null)
@@ -98,6 +102,8 @@ namespace FeedBridge.Services
 
                 await _configInitTask;
                 var posterUrl = _client.GetImageUrl("w500", media.PosterPath);
+
+                _logger.LogInformation("Media meta data collected.");
 
                 return new TmdbMediaInfo(posterUrl.AbsoluteUri, media.VoteAverage, media.GenreIds, titleInfo);
             }
