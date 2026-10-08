@@ -22,7 +22,7 @@ namespace FeedBridge
         {
             var relevantItems = await CollectRelevantItemsFromFeed();
 
-            if (!relevantItems.Any())
+            if (relevantItems.Count == 0)
             {
                 _logger.LogInformation("No relevant items found in the RSS feed!");
                 return;
@@ -32,7 +32,7 @@ namespace FeedBridge
 
             var catalogItems = await _factory.CreateCatalogItems(relevantItems, _ncoreSettings.MinimumMovieReleaseYearFilter);
 
-            if (!catalogItems.Any()) return;
+            if (catalogItems.Count == 0) return;
 
             _logger.LogInformation($"Fetching stored catalog items...");
 
@@ -65,7 +65,7 @@ namespace FeedBridge
             return [.. catalogItems.Where(item => item.PublishedDate.Date == DateTimeOffset.Now.Date)];
         }
 
-        private async Task<IEnumerable<Item>> CollectRelevantItemsFromFeed()
+        private async Task<List<Item>> CollectRelevantItemsFromFeed()
         {
             _logger.LogInformation("Collecting relevant items from RSS feed...");
 
@@ -85,11 +85,11 @@ namespace FeedBridge
                 doc = XmlReader.FromFile<NcoreRssDocument>(_ncoreSettings.RssFilePath);
             }
 
-            return doc.Channel.Items
+            return [.. doc.Channel.Items
                 .Where(item => _ncoreSettings.CategoryFilter.Contains(item.Category))
                 .Where(item => DateTimeOffset.TryParse(item.PublishedDate, out var publishedDate) && publishedDate.Date == DateTimeOffset.Now.Date)
                 .Where(item => !Regex.IsMatch(item.Title, @"\b(?:S\d{2}E\d{2}|E\d{2})\b", RegexOptions.IgnoreCase))
-                .Where(item => !_ncoreSettings.TitleKeyBlackList.Any(pair => item.Title.Contains(pair.Key, StringComparison.OrdinalIgnoreCase) && pair.Value.Any(value => item.Title.Contains(value, StringComparison.OrdinalIgnoreCase))));
+                .Where(item => !_ncoreSettings.TitleKeyBlackList.Any(pair => item.Title.Contains(pair.Key, StringComparison.OrdinalIgnoreCase) && pair.Value.Any(value => item.Title.Contains(value, StringComparison.OrdinalIgnoreCase))))];
         }
     }
 }

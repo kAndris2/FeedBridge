@@ -15,36 +15,40 @@ namespace FeedBridge.Services
         private List<Genre> _movieGenres;
         private List<Genre> _tvGenres;
 
-        public async Task<List<ICatalogItem>> CreateCatalogItems(IEnumerable<Item> items, int minimumMovieReleaseYearFilter)
+        public async Task<List<ICatalogItem>> CreateCatalogItems(List<Item> items, int minimumMovieReleaseYearFilter)
         {
             _logger.LogInformation("Catalog item creation is about to start...");
 
             _movieGenres = await _tmdbService.GetMovieGenresAsync();
             _tvGenres = await _tmdbService.GetTvGenresAsync();
 
-            var tasks = items
-                .Select(item => CreateCatalogItem(item, minimumMovieReleaseYearFilter))
-                .ToArray();
-            var catalogItems = (await Task.WhenAll(tasks))
-                .Where(c => c != null)
-                .Where(c => c is not SeriesCatalogItem series || !string.IsNullOrEmpty(series.Season))
-                .Cast<ICatalogItem>()
-                .ToArray();
+            var catalogItems = new List<ICatalogItem>();
 
-            if (catalogItems.Length == 0)
+            foreach (var item in items)
+            {
+                var catalogItem = await CreateCatalogItem(item, minimumMovieReleaseYearFilter);
+
+                if (catalogItem == null) continue;
+
+                if (catalogItem is SeriesCatalogItem series && string.IsNullOrEmpty(series.Season)) continue;
+
+                catalogItems.Add(catalogItem);
+            }
+
+            if (catalogItems.Count == 0)
             {
                 _logger.LogInformation("No relevant catalog items were created!");
                 return [];
             }
 
-            _logger.LogInformation($"Catalog items successfully created! [{tasks.Length}/{catalogItems.Length}]");
+            _logger.LogInformation($"Catalog items successfully created! [{items.Count}/{catalogItems.Count}]");
 
-            if (tasks.Length != catalogItems.Length)
-                _logger.LogInformation($"Some items were not matched with the catalog item's criteria! Affected items count: {tasks.Length - catalogItems.Length}");
+            if (items.Count != catalogItems.Count)
+                _logger.LogInformation($"Some items were not matched with the catalog item's criteria! Affected items count: {items.Count - catalogItems.Count}");
 
             var mergedCatalogItems = MergeCatalogItems(catalogItems).ToList();
 
-            _logger.LogInformation($"Merging of duplicated catalog items have been finsihed. - Merged items: {catalogItems.Length - mergedCatalogItems.Count} | Catalog items count: {mergedCatalogItems.Count}");
+            _logger.LogInformation($"Merging of duplicated catalog items have been finsihed. - Merged items: {catalogItems.Count - mergedCatalogItems.Count} | Catalog items count: {mergedCatalogItems.Count}");
 
             return mergedCatalogItems;
         }
