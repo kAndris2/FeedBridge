@@ -15,6 +15,7 @@ namespace FeedBridge.Services
         private readonly TmdbSettings _settings;
         private readonly TMDbClient _client;
         private readonly Task _configInitTask;
+        private readonly IDictionary<string, TmdbMediaInfo> _mediaInfoCache = new Dictionary<string, TmdbMediaInfo>();
 
         public TmdbService(IOptions<TmdbSettings> settings, ILogger<TmdbService> logger)
         {
@@ -52,6 +53,9 @@ namespace FeedBridge.Services
 
         public async Task<TmdbMediaInfo?> SearchMultiAsync(string title, Category? category, int year = 0)
         {
+            if (_mediaInfoCache.TryGetValue(title, out TmdbMediaInfo? value)) 
+                return value;
+
             try
             {
                 SearchContainer<SearchBase>? searchResult = null;
@@ -78,7 +82,10 @@ namespace FeedBridge.Services
                 if (media == null)
                     throw new InvalidDataException($"No relevant media found in the whole collection! Checked pages: {currentPage}/{searchResult?.TotalPages}");
 
-                return await CreateTmdbMediaInfo(media, category, year);
+                var mediaInfo = await CreateTmdbMediaInfo(media, category, year);
+                _mediaInfoCache.Add(title, mediaInfo);
+
+                return mediaInfo;
             }
             catch (Exception ex)
             {
