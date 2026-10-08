@@ -15,7 +15,7 @@ namespace FeedBridge.Services
         private List<Genre> _movieGenres;
         private List<Genre> _tvGenres;
 
-        public async Task<IEnumerable<ICatalogItem>> CreateCatalogItems(IEnumerable<Item> items)
+        public async Task<List<ICatalogItem>> CreateCatalogItems(IEnumerable<Item> items)
         {
             _logger.LogInformation("Catalog item creation is about to start...");
 
@@ -40,9 +40,13 @@ namespace FeedBridge.Services
             _logger.LogInformation($"Catalog items successfully created! [{tasks.Length}/{catalogItems.Length}]");
 
             if (tasks.Length != catalogItems.Length)
-                _logger.LogInformation($"Some items were not matched with the catalog item's criteria! Affacted items count: {tasks.Length - catalogItems.Length}");
+                _logger.LogInformation($"Some items were not matched with the catalog item's criteria! Affected items count: {tasks.Length - catalogItems.Length}");
 
-            return MergeCatalogItems(catalogItems);
+            var mergedCatalogItems = MergeCatalogItems(catalogItems).ToList();
+
+            _logger.LogInformation($"Merging of duplicated catalog items have been finsihed. - Merged items: {catalogItems.Length - mergedCatalogItems.Count} | Catalog items count: {mergedCatalogItems.Count}");
+
+            return mergedCatalogItems;
         }
 
         public IEnumerable<ICatalogItem> MergeCatalogItems(IEnumerable<ICatalogItem> items)

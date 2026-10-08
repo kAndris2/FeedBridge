@@ -34,12 +34,18 @@ namespace FeedBridge
 
             if (!catalogItems.Any()) return;
 
+            _logger.LogInformation($"Fetching stored catalog items...");
+
             var storedCatalogItems = await CollectRelevantCatalogItemsFromStorage();
 
-            if (storedCatalogItems.Any())
+            _logger.LogInformation($"Found {storedCatalogItems.Count} catalog items in the storage.");
+
+            if (storedCatalogItems.Count != 0)
             {
                 var mergedCatalogItemList = catalogItems.Concat(storedCatalogItems);
-                catalogItems = _factory.MergeCatalogItems(mergedCatalogItemList);
+                catalogItems = [.. _factory.MergeCatalogItems(mergedCatalogItemList)];
+
+                _logger.LogInformation($"Merging of processed and stored catalog items have beend finished. - Catalog items count: {catalogItems.Count}");
             }
 
             var jsonContent = JsonSerializer.Serialize(catalogItems, new JsonSerializerOptions
@@ -52,12 +58,11 @@ namespace FeedBridge
             _logger.LogInformation("Catalog items successfully uploaded on to Google Drive storage!");
         }
 
-        private async Task<IEnumerable<ICatalogItem>> CollectRelevantCatalogItemsFromStorage()
+        private async Task<List<ICatalogItem>> CollectRelevantCatalogItemsFromStorage()
         {
             var catalogItems = await _driveService.ReadJsonAsync<ICatalogItem>();
 
-            return catalogItems
-                .Where(item => item.PublishedDate.Date == DateTimeOffset.Now.Date);
+            return [.. catalogItems.Where(item => item.PublishedDate.Date == DateTimeOffset.Now.Date)];
         }
 
         private async Task<IEnumerable<Item>> CollectRelevantItemsFromFeed()
