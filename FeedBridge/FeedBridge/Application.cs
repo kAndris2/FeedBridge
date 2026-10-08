@@ -64,13 +64,21 @@ namespace FeedBridge
         {
             _logger.LogInformation("Collecting relevant items from RSS feed...");
 
-            /*
-            var content = await _rssClient.GetFeedAsync(_ncoreSettings.RssUrl);
-            var doc = new XmlReader()
-                .FromString<NcoreRssDocument>(content);
-            */
-            var doc = new XmlReader()
-                .FromFile<NcoreRssDocument>(_ncoreSettings.RssFilePath);
+            var xmlReader = new XmlReader();
+            NcoreRssDocument? doc = null;
+
+            if (!string.IsNullOrEmpty(_ncoreSettings.RssUrl))
+            {
+                var content = await _rssClient.GetFeedAsync(_ncoreSettings.RssUrl);
+                doc = XmlReader.FromString<NcoreRssDocument>(content);
+            }
+            else
+            {
+                if (string.IsNullOrEmpty(_ncoreSettings.RssFilePath))
+                    throw new InvalidDataException($"{nameof(_ncoreSettings.RssFilePath)} can not be empty!");
+
+                doc = XmlReader.FromFile<NcoreRssDocument>(_ncoreSettings.RssFilePath);
+            }
 
             return doc.Channel.Items
                 .Where(item => _ncoreSettings.CategoryFilter.Contains(item.Category))

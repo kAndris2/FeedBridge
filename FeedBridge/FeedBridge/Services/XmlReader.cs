@@ -4,7 +4,7 @@ namespace FeedBridge.Services
 {
     public class XmlReader
     {
-        public T FromString<T>(string content)
+        public static T FromString<T>(string content)
         {
             var xmlStart = content.IndexOf("<rss", StringComparison.Ordinal);
 
@@ -20,7 +20,7 @@ namespace FeedBridge.Services
             return (T)serializer.Deserialize(reader)!;
         }
 
-        public T FromFile<T>(string filePath)
+        public static T FromFile<T>(string filePath)
         {
             var content = File.ReadAllText(filePath);
             return FromString<T>(content);
