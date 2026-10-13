@@ -16,9 +16,25 @@
         }
     }
 
-    public class TmdbMediaTitleInfo(string? primaryTitle, string? secondaryTitle)
+    public class TmdbMediaTitleInfo
     {
-        public string? PrimaryTitle { get; private set; } = primaryTitle;
-        public string? SecondaryTitle { get; private set; } = secondaryTitle;
+        public string? PrimaryTitle { get; private set; }
+        public string? SecondaryTitle { get; private set; }
+
+        public TmdbMediaTitleInfo(string originalTitle, string? primaryTitle, string? secondaryTitle)
+        {
+            PrimaryTitle = primaryTitle;
+            SecondaryTitle = secondaryTitle;
+
+            if (string.IsNullOrEmpty(PrimaryTitle))
+            {
+                PrimaryTitle = originalTitle;
+            }
+
+            if (string.Equals(PrimaryTitle, SecondaryTitle, StringComparison.OrdinalIgnoreCase))
+            {
+                SecondaryTitle = null;
+            }
+        }
     }
 }

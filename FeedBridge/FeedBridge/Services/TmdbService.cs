@@ -82,7 +82,7 @@ namespace FeedBridge.Services
                 if (media == null)
                     throw new InvalidDataException($"No relevant media found in the whole collection! Checked pages: {currentPage}/{searchResult?.TotalPages}");
 
-                var mediaInfo = await CreateTmdbMediaInfo(media, category, year);
+                var mediaInfo = await CreateTmdbMediaInfo(media, category, year, title);
                 _mediaInfoCache.Add(title, mediaInfo);
 
                 return mediaInfo;
@@ -94,11 +94,11 @@ namespace FeedBridge.Services
             }
         }
 
-        private async Task<TmdbMediaInfo> CreateTmdbMediaInfo(SearchMovieTvBase media, Category? category, int year)
+        private async Task<TmdbMediaInfo> CreateTmdbMediaInfo(SearchMovieTvBase media, Category? category, int year, string originalTitle)
         {
             try
             {
-                var titleInfo = await GetTmdbMediaTitleInfo(media.Id, media.MediaType);
+                var titleInfo = await GetTmdbMediaTitleInfo(media.Id, media.MediaType, originalTitle);
 
                 if (media.PosterPath == null)
                     return new TmdbMediaInfo(media.VoteAverage, media.GenreIds, titleInfo);
@@ -114,7 +114,7 @@ namespace FeedBridge.Services
             }
         }
 
-        private async Task<TmdbMediaTitleInfo?> GetTmdbMediaTitleInfo(int mediaId, MediaType mediaType)
+        private async Task<TmdbMediaTitleInfo?> GetTmdbMediaTitleInfo(int mediaId, MediaType mediaType, string originalTitle)
         {
             try
             {
@@ -122,11 +122,11 @@ namespace FeedBridge.Services
 
                 if (mediaType == MediaType.Movie)
                 {
-                    titleInfo = await GetMovieTitleInfo(mediaId);
+                    titleInfo = await GetMovieTitleInfo(mediaId, originalTitle);
                 }
                 else if (mediaType == MediaType.Tv)
                 {
-                    titleInfo = await GetTvShowTitleInfo(mediaId);
+                    titleInfo = await GetTvShowTitleInfo(mediaId, originalTitle);
                 }
 
                 return titleInfo;
@@ -138,12 +138,12 @@ namespace FeedBridge.Services
             }
         }
 
-        private async Task<TmdbMediaTitleInfo?> GetMovieTitleInfo(int mediaId)
+        private async Task<TmdbMediaTitleInfo?> GetMovieTitleInfo(int mediaId, string originalTitle)
         {
             try
             {
                 var translations = (await _client.GetMovieTranslationsAsync(mediaId))?.Translations;
-                return CreateTmdbMediaTitleInfo(translations);
+                return CreateTmdbMediaTitleInfo(translations, originalTitle);
             }
             catch (Exception ex)
             {
@@ -151,12 +151,12 @@ namespace FeedBridge.Services
             }
         }
 
-        private async Task<TmdbMediaTitleInfo?> GetTvShowTitleInfo(int mediaId)
+        private async Task<TmdbMediaTitleInfo?> GetTvShowTitleInfo(int mediaId, string originalTitle)
         {
             try
             {
                 var translations = (await _client.GetTvShowTranslationsAsync(mediaId))?.Translations;
-                return CreateTmdbMediaTitleInfo(translations);
+                return CreateTmdbMediaTitleInfo(translations, originalTitle);
             }
             catch (Exception ex)
             {
@@ -164,7 +164,7 @@ namespace FeedBridge.Services
             }
         }
 
-        private TmdbMediaTitleInfo? CreateTmdbMediaTitleInfo(List<Translation>? translations)
+        private TmdbMediaTitleInfo CreateTmdbMediaTitleInfo(List<Translation>? translations, string originalTitle)
         {
             if (translations == null || translations.Count == 0) return null;
 
@@ -175,7 +175,7 @@ namespace FeedBridge.Services
                 .FirstOrDefault(t => t.Iso_639_1 == _settings.SecondaryLanguage)
                 ?.Data?.Name;
 
-            return (string.IsNullOrEmpty(primaryTitle) && string.IsNullOrEmpty(secondaryTitle)) ? null : new TmdbMediaTitleInfo(primaryTitle, secondaryTitle);
+            return new TmdbMediaTitleInfo(originalTitle, primaryTitle, secondaryTitle);
         }
 
         private static SearchMovieTvBase? FindRelevantMedia(List<SearchMovieTvBase> searchResult, Category? category, int year)
