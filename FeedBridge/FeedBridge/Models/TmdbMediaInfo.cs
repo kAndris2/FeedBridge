@@ -1,4 +1,6 @@
-﻿namespace FeedBridge.Models
+﻿using System.Text.Json.Serialization;
+
+namespace FeedBridge.Models
 {
     public class TmdbMediaInfo(string? posterUrl, double rate, IList<int>? genreIds, TmdbMediaTitleInfo? titleInfo)
     {
@@ -35,6 +37,11 @@
             {
                 SecondaryTitle = null;
             }
+        }
+
+        [JsonConstructor]
+        public TmdbMediaTitleInfo()
+        {
         }
     }
 }

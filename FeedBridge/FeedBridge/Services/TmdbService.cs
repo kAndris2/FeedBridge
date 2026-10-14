@@ -194,11 +194,14 @@ namespace FeedBridge.Services
             if (relevantSearchResults == null || !relevantSearchResults.Any())
                 throw new InvalidDataException($"No relevant search result found by category '{category}'!");
             
-            if (mediaType == MediaType.Movie)
+            if (mediaType == MediaType.Movie && year != 0)
             {
-                var mediaByReleaseYear = relevantSearchResults
-                    .Cast<SearchMovie>()
-                    .FirstOrDefault(r => r.ReleaseDate.Value.Year == year);
+                var movies = relevantSearchResults.Cast<SearchMovie>();
+
+                var mediaByReleaseYear = movies
+                    .FirstOrDefault(r => r.ReleaseDate.Value.Year == year)
+                    ?? movies.FirstOrDefault(r => r.ReleaseDate.Value.Year == year + 1)
+                    ?? movies.FirstOrDefault(r => r.ReleaseDate.Value.Year == year - 1);
 
                 return mediaByReleaseYear;
             }

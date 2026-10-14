@@ -99,7 +99,7 @@ namespace FeedBridge.Services
                     var extractedReleaseYear = _rssItemPropExtractor.ExtractReleaseYear(item.Title);
                     _ = int.TryParse(extractedReleaseYear, out int releaseYear);
 
-                    if (releaseYear < minimumMovieReleaseYearFilter) return null;
+                    if (releaseYear != 0 && releaseYear < minimumMovieReleaseYearFilter) return null;
 
                     var mediaInfo = await _tmdbService.SearchMultiAsync(originalTitle, category, releaseYear);
 
